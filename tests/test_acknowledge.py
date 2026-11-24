@@ -13,11 +13,15 @@ from dagwick.core import registered_checks, score_dag
 ACKNOWLEDGEABLE = {
     "catchup",
     "retries",
+    "dynamic_start_date",  # rarely right: say why the start_date can't be fixed
     "max_active_runs",
     "schedule",
+    "depends_on_past",  # each run may have to build on the one before
     "decomposition",
+    "isolated_tasks",  # a task can be independent on purpose (housekeeping, say)
     "retry_alerts",
     "failure_alerts",  # with a reason saying where failures are alerted instead
+    "deadline_alerts",  # with a reason saying how a late run is noticed instead
     "auto_pause",  # with a reason saying what stops the DAG when it keeps failing
     "sensor_slots",  # with a reason saying why the sensor must keep its slot
 }
@@ -133,7 +137,7 @@ def test_only_the_agreed_checks_can_be_acknowledged():
     allowed = {c.id for c in registered_checks() if c.acknowledgeable}
     assert allowed == ACKNOWLEDGEABLE
     hints = {c.id for c in registered_checks() if c.ack_hint}
-    assert hints == {"failure_alerts", "auto_pause", "sensor_slots"}
+    assert hints == {"failure_alerts", "deadline_alerts", "auto_pause", "sensor_slots"}
 
 
 def test_the_acknowledgement_demo_dag_shows_every_case():

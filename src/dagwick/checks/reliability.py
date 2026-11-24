@@ -1,13 +1,26 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
+from dagwick.checks._source import lines_set_true, moving_start_dates, parse
 from dagwick.checks._util import coverage
-from dagwick.core import Category, Finding, Status, check
+from dagwick.core import Category, Context, Finding, Status, check
 
 
 @check(
     id="retries",
+    why=(
+        "Most task failures are transient: a network blip, a database restart, a rate "
+        "limit. Without retries, one of them fails the whole run and someone has to clear"
+        " it by hand, often at night. Retries are only safe for idempotent tasks (running"
+        " twice gives the same result), so make tasks idempotent first."
+    ),
+    bad='default_args={"retries": 0}',
+    ack_when=(
+        "The task is not idempotent, so a retry would duplicate data (for example it "
+        "appends rows without de-duplicating), and it can't be made idempotent yet."
+    ),
     title="Tasks retry on failure",
     category=Category.RELIABILITY,
     weight=15,
@@ -25,8 +38,91 @@ def retries(dag: Any) -> Finding:
     )
 
 
+# wait_for_downstream=True makes Airflow set depends_on_past=True as well.
+PAST_SETTINGS = frozenset({"depends_on_past", "wait_for_downstream"})
+
+
+def _waits_for_past(task: Any) -> bool:
+    return any(getattr(task, name, False) for name in PAST_SETTINGS)
+
+
+@check(
+    id="depends_on_past",
+    why=(
+        "depends_on_past=True makes a task wait until the same task succeeded in the "
+        "previous run. After one failure, later runs stop: their tasks never start, the runs "
+        "stay running, and Airflow logs no error. With catchup=True and more than one active "
+        "run, every missed interval starts at once and all of them get stuck. dagrun_timeout "
+        "doesn't fix it: it fails those runs but marks their tasks skipped, which counts as "
+        "done, so later runs go on without the failed interval. Set in default_args, "
+        "depends_on_past applies to every task, usually by accident."
+    ),
+    bad=(
+        'DAG("daily_ingest", schedule="@daily", catchup=True,\n'
+        '    default_args={"depends_on_past": True})  # up to 16 runs at once'
+    ),
+    ack_when=(
+        "Every run must build on the one before (for example each run applies changes to "
+        "the previous day's table), failures are alerted, and someone fixes the failed run "
+        "before later runs may go on."
+    ),
+    title="Safe use of depends_on_past",
+    category=Category.RELIABILITY,
+    weight=8,
+    acknowledgeable=True,
+    example=(
+        'DAG("daily_ingest", schedule="@daily", catchup=True, max_active_runs=1)\n'
+        'BashOperator(task_id="load_day", ..., depends_on_past=True)  # only where needed'
+    ),
+    fix=(
+        "Set depends_on_past only on the tasks that need it, not in default_args. With "
+        "catchup=True, also set max_active_runs=1, so a failure holds up one run, not all."
+    ),
+)
+def depends_on_past(dag: Any, context: Context) -> Finding:
+    tasks = list(dag.tasks)
+    waiting = sorted(t.task_id for t in tasks if _waits_for_past(t))
+    if not waiting:
+        return Finding(Status.SKIP, "No task uses depends_on_past.")
+    every_task = len(waiting) == len(tasks)
+    tree = parse(context.source) if context.source else None
+    lines = lines_set_true(tree, PAST_SETTINGS) if tree else []
+    # Where it is set, when the source shows it; else the tasks (unless that is all of them).
+    items = tuple(f"line {line}: {name}=True" for line, name in lines) or (
+        () if every_task else tuple(waiting)
+    )
+    runs = getattr(dag, "max_active_runs", None)
+    if getattr(dag, "catchup", False) and (runs is None or runs > 1):
+        limit = f"max_active_runs={runs}" if runs else "no max_active_runs"
+        return Finding(
+            Status.FAIL,
+            f"depends_on_past with catchup=True and {limit}: one failed run leaves every "
+            "later run stuck in running, with no error.",
+            items,
+        )
+    defaults = getattr(dag, "default_args", None) or {}
+    if every_task and any(defaults.get(name) for name in PAST_SETTINGS):
+        return Finding(
+            Status.WARN,
+            "default_args makes every task wait for its own previous run, so one failure "
+            "stops every later run.",
+            items,
+        )
+    return Finding(
+        Status.PASS,
+        f"depends_on_past is set on {len(waiting)} of {len(tasks)} tasks, not on every task "
+        "through default_args.",
+    )
+
+
 @check(
     id="execution_timeout",
+    why=(
+        "A task that hangs (a stuck query, a connection that never times out) holds its "
+        "worker slot forever. Other tasks queue behind it, and because it never fails, no"
+        " alert fires. Set the limit a little above the task's longest normal run."
+    ),
+    bad='BashOperator(task_id="load", bash_command="load.sh")  # can run forever',
     title="Tasks have a time limit",
     category=Category.RELIABILITY,
     weight=10,
@@ -43,8 +139,98 @@ def execution_timeout(dag: Any) -> Finding:
     )
 
 
+LONG_RUN_SECONDS = 3600.0  # runs that usually take an hour or more
+LONG_DAGRUN_TIMEOUT = timedelta(hours=2)  # runs allowed to go on for over two hours
+NO_DEADLINES = object()  # the Airflow running Dagwick has no deadline alerts
+
+
+def _duration(seconds: float) -> str:
+    if seconds >= 3600:
+        return f"{seconds / 3600:.1f} h"
+    if seconds >= 60:
+        return f"{seconds / 60:.0f} min"
+    return f"{seconds:.0f} s"
+
+
+@check(
+    id="deadline_alerts",
+    why=(
+        "A run that is late but hasn't failed sets off nothing: on_failure_callback waits for "
+        "a failure, and dagrun_timeout for the timeout, hours away for a long DAG. Airflow 3 "
+        "removed SLAs; deadline alerts (Airflow 3.1 and later) replace them and call back "
+        "when a run isn't done in time. Only long-running DAGs are judged: recent runs that "
+        "usually take an hour or more, or a dagrun_timeout over two hours."
+    ),
+    bad=(
+        'DAG("nightly_warehouse", schedule="@daily", dagrun_timeout=timedelta(hours=6))\n'
+        "# no deadline: a run that is five hours late tells nobody"
+    ),
+    ack_when=(
+        "Something else notices late runs, for example a freshness check on the tables the "
+        "DAG writes, or an SLO alert in Grafana."
+    ),
+    title="Someone hears about late runs",
+    category=Category.RELIABILITY,
+    weight=5,
+    ack_hint="how a late run is noticed instead (for example a freshness check on the data)",
+    example=(
+        "from airflow.sdk.definitions.deadline import AsyncCallback, DeadlineAlert, "
+        "DeadlineReference\n\n"
+        "DAG(\n"
+        "    ...,\n"
+        "    deadline=DeadlineAlert(\n"
+        "        reference=DeadlineReference.DAGRUN_QUEUED_AT,\n"
+        "        interval=timedelta(hours=3),\n"
+        '        callback=AsyncCallback(SlackWebhookNotifier, kwargs={"text": "Late"}),\n'
+        "    ),\n"
+        ")"
+    ),
+    fix=(
+        "Add a deadline alert (Airflow 3.1 and later) that calls back when a run isn't done "
+        "in time, for example 3 hours after it was queued."
+    ),
+)
+def deadline_alerts(dag: Any, context: Context) -> Finding:
+    # Airflow 3.1 keeps DeadlineAlert objects on the DAG. From 3.2 on, a round trip keeps
+    # encoded alerts, and the DAG read from the database keeps the ids of its
+    # deadline_alert rows. Any of them means an alert is set; no deadline is None.
+    deadline = getattr(dag, "deadline", NO_DEADLINES)
+    if deadline is NO_DEADLINES:
+        return Finding(Status.SKIP, "This Airflow version has no deadline alerts.")
+    if deadline:
+        count = len(deadline) if isinstance(deadline, list | tuple) else 1
+        noun = "deadline alert is" if count == 1 else "deadline alerts are"
+        return Finding(Status.PASS, f"{count} {noun} set.")
+    typical = context.typical_run_seconds
+    if typical is not None and typical >= LONG_RUN_SECONDS:
+        return Finding(
+            Status.WARN,
+            f"Runs usually take {_duration(typical)}, and no deadline alert says when one is late.",
+        )
+    timeout = getattr(dag, "dagrun_timeout", None)
+    if timeout is not None and timeout > LONG_DAGRUN_TIMEOUT:
+        return Finding(
+            Status.WARN,
+            f"A run may take up to {_duration(timeout.total_seconds())} (dagrun_timeout), "
+            "and no deadline alert says when one is late.",
+        )
+    if typical is not None:
+        return Finding(
+            Status.SKIP, f"Runs usually take {_duration(typical)}, too short to need a deadline."
+        )
+    return Finding(
+        Status.SKIP, "Not enough to judge: no recent runs, and dagrun_timeout is not over 2 hours."
+    )
+
+
 @check(
     id="dagrun_timeout",
+    why=(
+        "A stuck run still counts as active. With max_active_runs=1, the next scheduled "
+        "run waits behind it forever and the data silently stops updating. dagrun_timeout"
+        " fails the stuck run, so the failure alert fires and the schedule moves on."
+    ),
+    bad='DAG("daily_sales", schedule="@daily")  # no dagrun_timeout',
     title="Runs have a time limit",
     category=Category.RELIABILITY,
     weight=8,
@@ -56,3 +242,53 @@ def dagrun_timeout(dag: Any) -> Finding:
     if timeout is None:
         return Finding(Status.FAIL, "dagrun_timeout is not set.")
     return Finding(Status.PASS, f"Runs time out after {timeout}.")
+
+
+def _has_start_date(dag: Any) -> bool:
+    if getattr(dag, "start_date", None) is not None:
+        return True
+    return any(getattr(t, "start_date", None) is not None for t in getattr(dag, "tasks", ()))
+
+
+@check(
+    id="dynamic_start_date",
+    why=(
+        "A start_date built from the current time, such as datetime.now(), pendulum.today()"
+        " or days_ago(1), is a new value every time Airflow parses the file, every few "
+        "minutes. Runs are scheduled from that date, so a run may never become due, or runs "
+        "appear and disappear, and in Airflow 3 each new value makes a new DAG version. The "
+        "serialized DAG only keeps the timestamp, so Dagwick reads the DAG file."
+    ),
+    bad=(
+        "START = datetime.now() - timedelta(days=1)  # a new value on every parse\n"
+        'DAG("daily_sales", schedule="@daily", start_date=START)'
+    ),
+    ack_when=(
+        "Rarely: for example a DAG that only runs when triggered (schedule=None), so "
+        "start_date doesn't decide when it runs. Even then, removing the start_date is better."
+    ),
+    title="Fixed start_date",
+    category=Category.RELIABILITY,
+    weight=10,
+    acknowledgeable=True,
+    example='DAG(..., start_date=pendulum.datetime(2026, 1, 1, tz="UTC"))',
+    fix=(
+        'Use a fixed date, for example pendulum.datetime(2026, 1, 1, tz="UTC"). With '
+        "catchup=False, a date in the past doesn't start a backfill."
+    ),
+)
+def dynamic_start_date(dag: Any, context: Context) -> Finding:
+    if not _has_start_date(dag):
+        return Finding(Status.SKIP, "The DAG has no start_date.")
+    tree = parse(context.source) if context.source else None
+    if tree is None:
+        return Finding(Status.SKIP, "The DAG's source code is not available.")
+    found = moving_start_dates(tree)
+    if not found:
+        return Finding(Status.PASS, "No start_date changes when the file is parsed.")
+    where = "" if len(found) == 1 else f" in {len(found)} places"
+    return Finding(
+        Status.FAIL,
+        f"start_date uses the current time{where}, so it moves forward on every parse.",
+        tuple(f"line {line}: {what}" for line, what in found),
+    )

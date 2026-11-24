@@ -2,6 +2,17 @@
 
 [![PyPI](https://img.shields.io/pypi/v/dagwick?color=a99aff)](https://pypi.org/project/dagwick/) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white) [![CI](https://github.com/dagwick/dagwick/actions/workflows/ci.yml/badge.svg)](https://github.com/dagwick/dagwick/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-2f9e6e)](https://github.com/dagwick/dagwick/blob/main/LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/dagwick/dagwick/badge)](https://scorecard.dev/viewer/?uri=github.com/dagwick/dagwick) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16521/badge)](https://www.bestpractices.dev/projects/16521)
 
+**Lint and fix your Airflow DAGs.** Dagwick checks DAGs for reliability and
+readability (retries, timeouts, alerts, owners, docs, slow parsing, secrets in
+code, deprecated imports, ...), fixes what it safely can, and explains every
+check. Run it on your DAG files in CI, and see the grades inside Airflow.
+
+```bash
+pip install dagwick
+dagwick check dags/ --min-grade C   # grade every DAG from A to F
+dagwick fix dags/ --write           # fix what can be fixed safely
+```
+
 ![Dagwick: grade your Airflow DAGs from A to F, right inside the Airflow UI](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/banner.png)
 
 ![Dagwick in 15 seconds: a DAG's Dagwick tab with its score, run health and score history, then the fleet page filtered by a common issue](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/demo.gif)
@@ -59,13 +70,14 @@ like values written in the DAG file.
 
 ## What you get
 
-- **A score and a grade for every DAG.** 20 checks in 7 categories:
+- **A score and a grade for every DAG.** 24 checks in 7 categories:
   reliability, observability, ownership, scheduling, structure, performance
   and security. Each check that doesn't pass tells you how to fix it. See
   [what it checks](https://github.com/dagwick/dagwick/blob/main/docs/checks.md).
 - **Checks that read your DAG file without running it:** `Variable.get` at
   parse time, deprecated Airflow imports, hard-coded secrets (the value is
-  never shown), and sensors that hold a worker slot while they wait.
+  never shown), a `start_date` that moves on every parse, and sensors that
+  hold a worker slot while they wait.
 - **Run health** next to the score: success rate, retries, typical run time
   and its trend over the last 30 days. It never changes the score.
 - **Score history:** the score of each of the last 20 versions of a DAG, and
@@ -76,8 +88,8 @@ like values written in the DAG file.
   days). The file is built in your browser from what you are allowed to see.
   To put the same data in a dashboard, see
   [Fleet data in a dashboard](https://github.com/dagwick/dagwick/blob/main/docs/dashboards.md).
-- **`dagwick check` and a pre-commit hook** to grade DAG files before they are
-  merged. See [Check DAGs before they are merged](#check-dags-before-they-are-merged).
+- **`dagwick check`, `dagwick fix` and pre-commit hooks** to lint and fix DAG
+  files before they are merged. See [Lint and fix DAG files](#lint-and-fix-dag-files).
 - **Break a check on purpose, with a reason.** Some DAGs need `catchup=True`
   or no retries. See [Acknowledge a check on purpose](#acknowledge-a-check-on-purpose).
 - **Your own rules as a check pack:** a separate package that adds checks
@@ -126,12 +138,16 @@ comment.
 | Check | Id | The reason must say |
 | --- | --- | --- |
 | Tasks retry on failure | `retries` | why the DAG breaks it on purpose |
+| Fixed start_date | `dynamic_start_date` | why the DAG breaks it on purpose |
 | Retries are visible | `retry_alerts` | why the DAG breaks it on purpose |
 | Has a schedule | `schedule` | why the DAG breaks it on purpose |
 | No surprise backfills | `catchup` | why the DAG breaks it on purpose |
 | Bounded parallel runs | `max_active_runs` | why the DAG breaks it on purpose |
+| Safe use of depends_on_past | `depends_on_past` | why the DAG breaks it on purpose |
 | Split into steps | `decomposition` | why the DAG breaks it on purpose |
+| Tasks are connected | `isolated_tasks` | why the DAG breaks it on purpose |
 | Someone hears about failures | `failure_alerts` | where failures are alerted instead, e.g. a central listener or a Grafana rule |
+| Someone hears about late runs | `deadline_alerts` | how a late run is noticed instead, e.g. a freshness check on the data |
 | Stops after repeated failures | `auto_pause` | what stops the DAG when it keeps failing, e.g. on-call pausing it by hand |
 | Sensors free their worker slot | `sensor_slots` | why the sensor must keep its worker slot, e.g. it needs sub-minute reaction |
 
@@ -141,35 +157,39 @@ protects something every DAG needs. A comment for one of them is ignored, and
 the Dagwick tab says so. Run `./dev/run.sh` from a clone of this repository to
 see a demo DAG (`demo_acknowledged_ingest`) with every case.
 
-## Check DAGs before they are merged
+## Lint and fix DAG files
 
-`dagwick check` grades DAG files with the same checks as the UI and can fail a
-pull request below a chosen grade:
+The same checks run on your DAG files, before they are merged:
 
 ```bash
-dagwick check dags/ --min-grade C     # exit 1 if any DAG is below C
-dagwick check dags/my_dag.py --json   # machine-readable report
+dagwick check dags/ --min-grade C   # grade every DAG; exit 1 if any is below C
+dagwick fix dags/ --write           # fix what can be fixed safely
+dagwick explain retries             # why a check exists, with bad and good code
 ```
 
-It needs Airflow installed next to it, and it **imports the DAG files**, so
-their top-level code runs, the same as in Airflow's DAG processor. Use it on a
-developer machine or in CI. The Airflow plugin itself never runs DAG code.
+- `dagwick check` needs Airflow installed next to it, and it **imports the
+  DAG files**, so their top-level code runs, as in Airflow's DAG processor.
+  The Airflow plugin itself never runs DAG code.
+- `dagwick fix` never imports or runs the files. It moves deprecated imports
+  to their new path, and with `--unsafe-fixes` adds missing retries. Without
+  `--write` it only shows the diff.
+- `dagwick explain` needs neither Airflow nor your DAGs.
 
-Exit codes: `0` all good, `1` a DAG is below `--min-grade`, `2` a file failed
-to load.
-
-### pre-commit
+pre-commit:
 
 ```yaml
 - repo: https://github.com/dagwick/dagwick
-  rev: v0.2.0
+  rev: v0.3.0
   hooks:
+    - id: dagwick-fix   # needs Dagwick newer than 0.3.0
     - id: dagwick
       args: [--min-grade, C]   # default: D
 ```
 
-The hook uses `language: system`, so run pre-commit from an environment where
-Airflow and Dagwick are installed.
+The hooks use `language: system`, so run pre-commit where Airflow and Dagwick
+are installed. **[Lint and fix your DAGs](https://github.com/dagwick/dagwick/blob/main/docs/linting.md)**
+has everything else: exit codes, a GitHub Actions workflow, how to adopt it in
+an existing repository, and how it fits next to Ruff's Airflow rules.
 
 ## Requirements
 

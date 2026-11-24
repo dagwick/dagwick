@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import difflib
+import importlib.util
 import json
 import os
 import sys
@@ -17,6 +19,7 @@ GRADES = ("A", "B", "C", "D", "F")
 ICON = {"fail": "x", "warn": "!"}
 
 OK, BELOW_GRADE, LOAD_ERROR = 0, 1, 2
+USAGE_ERROR = 2  # same code argparse uses for a bad command line
 
 DISPUTE_URL = "https://github.com/dagwick/dagwick/issues/new?template=dispute.yml"
 DISPUTE_HINT = f"Disagree with a check or hit a false positive? Tell us: {DISPUTE_URL}"
@@ -99,7 +102,8 @@ def render(
         print(f"{r['grade']}  {r['score']:5.1f}  {r['dag_id']}  ({r['file']}){flag}", file=out)
         for c in r["checks"]:
             if c["status"] in ICON:
-                print(f"       {ICON[c['status']]} {c['title']}: {c['fix']}", file=out)
+                hint = fixable_hint(c["id"])
+                print(f"       {ICON[c['status']]} {c['title']}: {c['fix']}{hint}", file=out)
                 for item in c["items"][:5]:
                     print(f"           {item}", file=out)
     failing = sum(below(r["grade"], minimum) for r in reports)
@@ -111,6 +115,96 @@ def render(
     print(summary, file=out)
 
 
+def fixable_hint(check_id: str) -> str:
+    """Tell the reader when `dagwick fix` can fix a check."""
+    from dagwick.fix import FIXERS
+
+    fixer = FIXERS.get(check_id)
+    if fixer is None:
+        return ""
+    return " [dagwick fix]" if fixer.safe else " [dagwick fix --unsafe-fixes]"
+
+
+def python_files(paths: Sequence[Path]) -> list[Path]:
+    """The .py files in ``paths``, skipping hidden folders and __pycache__."""
+    found: list[Path] = []
+    for path in paths:
+        if path.is_file():
+            found.append(path)
+            continue
+        for file in sorted(path.rglob("*.py")):
+            parts = file.relative_to(path).parts
+            if not any(p.startswith(".") or p == "__pycache__" for p in parts):
+                found.append(file)
+    return found
+
+
+def _plural(n: int, word: str) -> str:
+    return f"{n} {word}{'' if n == 1 else 's'}"
+
+
+def _fix(paths: Sequence[Path], write: bool, unsafe: bool, out: TextIO, err: TextIO) -> int:
+    from dagwick.fix import fix_source
+
+    if importlib.util.find_spec("airflow") is None:
+        print(
+            "dagwick: Airflow is not installed here, so deprecated imports can't be fixed "
+            "(Dagwick reads the new paths from Airflow itself).",
+            file=err,
+        )
+    fixed = files = skipped = 0
+    failed = False
+    for path in python_files(paths):
+        try:
+            with path.open(encoding="utf-8", newline="") as f:
+                text = f.read()
+            result = fix_source(text, unsafe=unsafe)
+        except (OSError, UnicodeDecodeError, SyntaxError, ValueError) as exc:
+            print(f"dagwick: can't fix {path}: {type(exc).__name__}: {exc}", file=err)
+            failed = True
+            continue
+        for f in result.applied:
+            print(f"{path}:{f.line}: {f.check_id}: {f.message}", file=out)
+        for f in result.unsafe_skipped:
+            print(f"{path}:{f.line}: {f.check_id}: {f.message} [--unsafe-fixes]", file=out)
+        skipped += len(result.unsafe_skipped)
+        if not result.applied:
+            continue
+        fixed += len(result.applied)
+        files += 1
+        if write:
+            with path.open("w", encoding="utf-8", newline="") as f:
+                f.write(result.text)
+        else:
+            diff = difflib.unified_diff(
+                text.splitlines(keepends=True),
+                result.text.splitlines(keepends=True),
+                f"a/{path}",
+                f"b/{path}",
+            )
+            out.writelines(diff)
+    problems = _plural(fixed, "problem")
+    if write:
+        print(f"Fixed {problems} in {_plural(files, 'file')}.", file=out)
+    elif fixed:
+        print(
+            f"Would fix {problems} in {_plural(files, 'file')}. "
+            "Run with --write to apply the changes.",
+            file=out,
+        )
+    else:
+        print("Nothing to fix.", file=out)
+    if skipped:
+        more = "1 more fix" if skipped == 1 else f"{skipped} more fixes"
+        print(
+            f"{more} with --unsafe-fixes. They change what the DAG does, so review each one.",
+            file=out,
+        )
+    if failed:
+        return LOAD_ERROR
+    return BELOW_GRADE if fixed and not write else OK
+
+
 def flagged(reports: list[dict[str, Any]]) -> bool:
     """Whether any built-in check failed or warned, so a dispute could make sense."""
     return any(
@@ -120,10 +214,30 @@ def flagged(reports: list[dict[str, Any]]) -> bool:
     )
 
 
-def main(
-    argv: Sequence[str] | None = None, out: TextIO = sys.stdout, err: TextIO = sys.stderr
-) -> int:
-    parser = argparse.ArgumentParser(prog="dagwick", description="Grade Airflow DAGs.")
+def _explain(check_id: str | None, out: TextIO, err: TextIO) -> int:
+    from dagwick.core import registered_checks
+    from dagwick.explain import explain_text, list_text
+
+    specs = {s.id: s for s in registered_checks()}
+    if check_id is None:
+        out.write(list_text(specs.values()))
+        return OK
+    spec = specs.get(check_id.strip().lower())
+    if spec is None:
+        close = difflib.get_close_matches(check_id, specs, n=3)
+        hint = f" Did you mean: {', '.join(close)}?" if close else ""
+        print(f"dagwick: unknown check {check_id!r}.{hint}", file=err)
+        print("Run `dagwick explain` to list every check.", file=err)
+        return USAGE_ERROR
+    out.write(explain_text(spec))
+    return OK
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """The command line: ``dagwick check``, ``dagwick explain`` and ``dagwick fix``."""
+    parser = argparse.ArgumentParser(
+        prog="dagwick", description="Grade Airflow DAGs and explain the checks."
+    )
     parser.add_argument("--version", action="version", version=f"dagwick {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     check = sub.add_parser(
@@ -142,11 +256,50 @@ def main(
         help="exit with status 1 if any DAG scores below this grade",
     )
     check.add_argument("--json", action="store_true", help="print the reports as JSON")
+    explain = sub.add_parser(
+        "explain",
+        help="explain why a check exists and how to fix it",
+        description=(
+            "Explain a check: why it matters, bad and good code, how to fix it and when "
+            "it is fine to acknowledge. Without a check id, list every check. "
+            "Does not need Airflow."
+        ),
+    )
+    explain.add_argument("check_id", nargs="?", help="the check to explain, e.g. retries")
+    fix = sub.add_parser(
+        "fix",
+        help="fix what can be fixed automatically",
+        description=(
+            "Fix problems in DAG files automatically. Shows a diff and exits with status 1 "
+            "if there is something to fix; --write changes the files. The DAG files are "
+            "only read, never imported or run."
+        ),
+    )
+    fix.add_argument("paths", nargs="+", type=Path, help="DAG files or folders")
+    fix.add_argument("--write", action="store_true", help="change the files")
+    fix.add_argument(
+        "--unsafe-fixes",
+        action="store_true",
+        help="also apply fixes that change what the DAG does (for example adding retries)",
+    )
+    return parser
+
+
+def main(
+    argv: Sequence[str] | None = None, out: TextIO = sys.stdout, err: TextIO = sys.stderr
+) -> int:
+    parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.command == "explain":
+        return _explain(args.check_id, out, err)
 
     missing = [str(p) for p in args.paths if not p.exists()]
     if missing:
         parser.error(f"no such file or folder: {', '.join(missing)}")
+
+    if args.command == "fix":
+        return _fix(args.paths, args.write, args.unsafe_fixes, out, err)
 
     os.environ.setdefault("AIRFLOW__CORE__LOAD_EXAMPLES", "False")
     with contextlib.redirect_stdout(sys.stderr):

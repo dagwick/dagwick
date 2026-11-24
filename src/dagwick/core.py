@@ -79,6 +79,7 @@ class Context:
     sensor_tasks: tuple[str, ...] | None = None
     sensor_runs: dict[str, tuple[float | None, bool]] | None = None
     default_deferrable: bool = False
+    typical_run_seconds: float | None = None  # median of the DAG's recent successful runs
 
 
 @dataclass(frozen=True)
@@ -94,6 +95,9 @@ class CheckSpec:
     acknowledgeable: bool = False
     ack_hint: str = ""
     pack: str = BUILTIN_PACK  # the distribution that registered the check
+    why: str = ""  # the failure the check prevents (dagwick explain, docs, DAG tab)
+    bad: str = ""  # code that breaks the check; ``example`` shows the fix
+    ack_when: str = ""  # when breaking the check on purpose is fine
 
 
 @dataclass(frozen=True)
@@ -111,6 +115,7 @@ class CheckResult:
     ack_reason: str = ""  # why the DAG breaks this check on purpose (status "ack")
     ack_note: str = ""  # why a "# dagwick: ack" comment for this check was ignored
     pack: str = BUILTIN_PACK  # the distribution that registered the check
+    why: str = ""  # why the check matters; set only when the check needs work
 
 
 _REGISTRY: dict[str, CheckSpec] = {}
@@ -137,6 +142,9 @@ def check(
     example: str = "",
     acknowledgeable: bool = False,
     ack_hint: str = "",
+    why: str = "",
+    bad: str = "",
+    ack_when: str = "",
 ) -> Callable[[Callable[[Any], Finding]], Callable[[Any], Finding]]:
     """Register a DAG check.
 
@@ -146,6 +154,9 @@ def check(
     ``# dagwick: ack <id> -- <reason>`` comment; only allow it where there is a
     legitimate reason to break the check. ``ack_hint`` says what the reason must
     explain (for example where failures are alerted instead).
+    ``why`` explains the failure the check prevents, ``bad`` is code that breaks
+    it, and ``ack_when`` says when breaking it on purpose is fine. They are shown
+    by ``dagwick explain``, in the docs and in the DAG tab; all three are optional.
     A check function takes the DAG, and optionally a :class:`Context` as a
     second parameter.
     Re-registering the same ``id`` replaces the previous check, which lets a
@@ -168,6 +179,9 @@ def check(
             acknowledgeable or bool(ack_hint),
             ack_hint,
             _pack_for(func.__module__),
+            why,
+            bad,
+            ack_when,
         )
         return func
 
@@ -304,6 +318,7 @@ def score_dag(
                 ack_reason=ack_reason,
                 ack_note=ack_note,
                 pack=spec.pack,
+                why=spec.why if needs_work else "",
             )
         )
 
