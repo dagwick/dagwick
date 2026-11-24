@@ -10,8 +10,8 @@ not apply to a DAG is left out of the score.
 | Reliability | Tasks retry on failure | 15 | yes |
 | Reliability | Tasks have a time limit (`execution_timeout`) | 10 | no |
 | Reliability | Runs have a time limit (`dagrun_timeout`) | 8 | no |
-| Observability | Someone hears about failures (`on_failure_callback`) | 15 | yes, see below |
-| Observability | Retries are visible (`on_retry_callback`) | 3 | yes |
+| Observability | Someone hears about failures (`on_failure_callback`, or `email` with `email_on_failure`) | 15 | yes, see below |
+| Observability | Retries are visible (`on_retry_callback`, or `email` with `email_on_retry`) | 3 | yes |
 | Ownership | Has a real owner (not the default `airflow`) | 8 | no |
 | Ownership | Documented (`doc_md`) | 8 | no |
 | Ownership | Tagged | 5 | no |
@@ -27,6 +27,15 @@ not apply to a DAG is left out of the score.
 | Performance | No `Variable.get` at parse time (top level, default args, decorator arguments, `@dag` function bodies) | 5 | no |
 | Performance | Sensors free their worker slot (a poke-mode sensor that waits a minute or more per run; needs run history) | 5 | yes, see below |
 | Security | No secrets in the DAG file (values assigned to secret-looking names, known token formats, passwords in connection URIs; the value is never shown) | 10 | no |
+
+An email counts as an alert only when `email` is set: Airflow turns
+`email_on_failure` and `email_on_retry` on by default, so the flags alone send
+nothing.
+
+Dagwick scores the DAG as Airflow loaded it, so values that come from
+elsewhere already count: `default_args` imported from a shared module, and
+`airflow.cfg` defaults such as `[core] default_task_retries` and
+`[core] default_task_execution_timeout`.
 
 ## Tune the scoring
 
