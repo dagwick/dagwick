@@ -13,8 +13,8 @@ not apply to a DAG is left out of the score.
 | Reliability | Someone hears about late runs (a deadline alert on DAGs whose runs usually take an hour or more, or whose `dagrun_timeout` is over two hours; run times need run history) | 5 | yes, see below |
 | Reliability | Runs have a time limit (`dagrun_timeout`) | 8 | no |
 | Reliability | Fixed `start_date` (not `datetime.now()`, `pendulum.today()`, `days_ago()` and the like, on the DAG, a task, in `default_args` or through a variable; read from the DAG file) | 10 | yes |
-| Observability | Someone hears about failures (`on_failure_callback`) | 15 | yes, see below |
-| Observability | Retries are visible (`on_retry_callback`) | 3 | yes |
+| Observability | Someone hears about failures (`on_failure_callback`, or `email` with `email_on_failure`) | 15 | yes, see below |
+| Observability | Retries are visible (`on_retry_callback`, or `email` with `email_on_retry`) | 3 | yes |
 | Ownership | Has a real owner (not the default `airflow`) | 8 | no |
 | Ownership | Documented (`doc_md`) | 8 | no |
 | Ownership | Tagged | 5 | no |
@@ -40,6 +40,15 @@ Airflow.
 `dagwick fix` repairs two checks automatically (see the README): **Uses current
 Airflow imports** as a safe fix, and **Tasks retry on failure** as an unsafe
 fix (`--unsafe-fixes`), because retrying is only right for idempotent tasks.
+
+An email counts as an alert only when `email` is set: Airflow turns
+`email_on_failure` and `email_on_retry` on by default, so the flags alone send
+nothing.
+
+Dagwick scores the DAG as Airflow loaded it, so values that come from
+elsewhere already count: `default_args` imported from a shared module, and
+`airflow.cfg` defaults such as `[core] default_task_retries` and
+`[core] default_task_execution_timeout`.
 
 ## Tune the scoring
 
@@ -279,7 +288,7 @@ exactly what `dagwick explain <check>` says.
 
 **Someone hears about failures** · observability · 15 points · can be acknowledged
 
-**Why it matters.** A DAG that fails without telling anyone keeps failing until someone notices stale data, often days later and often a user of the data. A failure callback or notifier sends the failure to where the owners look.
+**Why it matters.** A DAG that fails without telling anyone keeps failing until someone notices stale data, often days later and often a user of the data. A failure callback, a notifier or an email sends the failure to where the owners look.
 
 Bad:
 
@@ -290,10 +299,10 @@ default_args={"owner": "data-team"}  # no on_failure_callback
 Good:
 
 ```python
-default_args={"on_failure_callback": send_slack_alert}
+default_args={"on_failure_callback": send_slack_alert}  # or {"email": "team@example.com", "email_on_failure": True}
 ```
 
-**How to fix.** Add on_failure_callback (e.g. a Slack notifier) in default_args.
+**How to fix.** Add on_failure_callback (e.g. a Slack notifier) in default_args, or set email with email_on_failure=True.
 
 **When it's fine to acknowledge.** Failures are alerted somewhere else, for example by a central listener plugin, a Grafana or Prometheus rule on task state, or an on-call system that watches Airflow. The reason must say where failures are alerted instead (e.g. a central listener or a Grafana rule).
 
@@ -312,10 +321,10 @@ default_args={"retries": 3}  # retries happen silently
 Good:
 
 ```python
-default_args={"on_retry_callback": send_slack_alert}
+default_args={"on_retry_callback": send_slack_alert}  # or {"email": "team@example.com", "email_on_retry": True}
 ```
 
-**How to fix.** Add on_retry_callback so flaky tasks surface before they start failing.
+**How to fix.** Add on_retry_callback, or set email with email_on_retry=True, so flaky tasks surface before they start failing.
 
 **When it's fine to acknowledge.** Retries are expected and would only be noise, for example a task that polls an API which rate-limits by design.
 

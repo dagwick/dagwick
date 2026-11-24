@@ -86,11 +86,23 @@ All notable changes to this project are documented here. The format follows
   Airflow 3.1, 3.2, 3.3 and 3.4. Reliability, 5 points; it can be
   acknowledged with a reason that says how late runs are noticed instead.
 
+- **Try it in one command.** `docker compose -f demo/compose.yaml up` starts a
+  local Airflow 3 sandbox with the latest Dagwick release and the demo DAGs, on
+  <http://localhost:8080> only.
+
 ### Changed
 
 - **Dagwick presents itself as a DAG linter.** The README and the PyPI
   summary now lead with linting and fixing DAG files; the Airflow UI is the
   other half. The pre-commit example uses `rev: v0.3.0`.
+- **Email alerts count.** "Someone hears about failures" (`failure_alerts`)
+  now also passes for tasks with an `email` and `email_on_failure`, and
+  "Retries are visible" (`retry_alerts`) for an `email` with `email_on_retry`.
+  The pass message says whether it found a callback or an email.
+- **The README says up front that every check can be retuned:** weights,
+  disabled checks and acknowledgements, plus defaults from shared
+  `default_args` or `airflow.cfg`.
+
 - **The repository moved to the `dagwick` organization:**
   <https://github.com/dagwick/dagwick>. Old links redirect. Releases up to
   0.3.x still verify against `ardalan-jalal/dagwick`, where they were signed.

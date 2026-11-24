@@ -17,6 +17,18 @@ dagwick fix dags/ --write           # fix what can be fixed safely
 
 ![Dagwick in 15 seconds: a DAG's Dagwick tab with its score, run health and score history, then the fleet page filtered by a common issue](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/demo.gif)
 
+## Try it in one command
+
+Needs Docker. This starts a throwaway Airflow 3 with Dagwick and a few demo DAGs:
+
+```bash
+git clone https://github.com/dagwick/dagwick && docker compose -f dagwick/demo/compose.yaml up
+```
+
+Open <http://localhost:8080> and click **Dagwick** in the sidebar. No login:
+the sandbox is reachable only from your machine. Stop it with `Ctrl+C`. See
+[`demo/`](demo/) for grading the demo DAGs from the command line instead.
+
 ## Setup
 
 **1. Install** it where Airflow runs:
@@ -34,9 +46,27 @@ Using Docker? Add `dagwick` to your Airflow image's `requirements.txt`.
 - a **Dagwick** tab on every DAG page, and
 - a **Dagwick** page in the sidebar that grades all your DAGs.
 
-That's it. There is nothing to configure. If you want to, you can turn checks
-off, change their weights or move the grade thresholds in `airflow.cfg`
-([tune the scoring](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#tune-the-scoring)).
+That's it. There is nothing to configure.
+
+## Your team, your rules
+
+The checks are defaults, not laws. What a good DAG looks like depends on your
+team, so every check can be retuned:
+
+- **Change how much a check counts:** `weights` under `[dagwick]` in
+  `airflow.cfg`, e.g. `weights = retries:20, tags:2`.
+- **Turn a check off for the whole deployment:** `disabled_checks`, e.g.
+  `disabled_checks = file_name, naming`.
+- **Accept a check for one DAG, with a reason:**
+  `# dagwick: ack <check> -- <reason>` in the DAG file.
+
+See [tune the scoring](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#tune-the-scoring)
+and [acknowledge a check on purpose](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#acknowledge-a-check-on-purpose).
+
+Defaults you already set elsewhere count too. Dagwick reads the DAG as Airflow
+loaded it, so `default_args` from a shared module and `airflow.cfg` defaults
+such as `default_task_retries` and `default_task_execution_timeout` are seen
+like values written in the DAG file.
 
 ## What you get
 
