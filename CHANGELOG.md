@@ -21,6 +21,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Email alerts count.** "Someone hears about failures" (`failure_alerts`)
+  now also passes for tasks with an `email` and `email_on_failure`, and
+  "Retries are visible" (`retry_alerts`) for an `email` with `email_on_retry`.
+  The pass message says whether it found a callback or an email.
+- **The README says up front that every check can be retuned:** weights,
+  disabled checks and acknowledgements, plus defaults from shared
+  `default_args` or `airflow.cfg`.
+
 - **The repository moved to the `dagwick` organization:**
   <https://github.com/dagwick/dagwick>. Old links redirect. Releases up to
   0.3.x still verify against `ardalan-jalal/dagwick`, where they were signed.
