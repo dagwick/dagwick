@@ -15,6 +15,10 @@ All notable changes to this project are documented here. The format follows
   output is unchanged. Checks from check packs get no link.
   The form replaces the "False alarm" form: pick "False alarm" in it instead.
 
+- **Try it in one command.** `docker compose -f demo/compose.yaml up` starts a
+  local Airflow 3 sandbox with the latest Dagwick release and the demo DAGs, on
+  <http://localhost:8080> only.
+
 ### Changed
 
 - **The repository moved to the `dagwick` organization:**
