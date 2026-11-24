@@ -6,6 +6,18 @@
 
 ![Dagwick in 15 seconds: a DAG's Dagwick tab with its score, run health and score history, then the fleet page filtered by a common issue](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/demo.gif)
 
+## Try it in one command
+
+Needs Docker. This starts a throwaway Airflow 3 with Dagwick and a few demo DAGs:
+
+```bash
+git clone https://github.com/dagwick/dagwick && docker compose -f dagwick/demo/compose.yaml up
+```
+
+Open <http://localhost:8080> and click **Dagwick** in the sidebar. No login:
+the sandbox is reachable only from your machine. Stop it with `Ctrl+C`. See
+[`demo/`](demo/) for grading the demo DAGs from the command line instead.
+
 ## Setup
 
 **1. Install** it where Airflow runs:
