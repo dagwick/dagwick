@@ -76,6 +76,10 @@ jobs:
             python: "3.10"
           - airflow: "3.2.2"
             python: "3.12"
+          - airflow: "3.3.2"
+            python: "3.11"
+          - airflow: "3.4.0"
+            python: "3.13"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
