@@ -350,8 +350,9 @@ function Fleet({ dags: fleet, truncated }: { dags: FleetDag[]; truncated: boolea
         </aside>
       </div>
       <footer className="dagwick-foot dagwick-muted">
-        {truncated ? `Showing the first ${fleet.length} DAGs. ` : ""}Scored automatically from the latest parsed
-        version of each DAG. · {BRAND} {VERSION}
+        {truncated ? `Showing the first ${fleet.length} DAGs. ` : ""}Grades come from each DAG's latest
+        version, plus recent runs for the sensor and late-run checks. Success rates are shown for context and
+        don't change the grade. · {BRAND} {VERSION}
       </footer>
     </>
   );
