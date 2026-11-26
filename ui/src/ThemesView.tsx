@@ -139,9 +139,9 @@ function Themes({ themes }: { themes: ThemeInfo[] }) {
       )}
 
       <div className="dagwick-theme-list">
-        {/* Ready to apply first, then those coming soon; each group keeps its order. */}
-        {[...themes]
-          .sort((a, b) => Number(comingSoon(a)) - Number(comingSoon(b)))
+        {/* Only themes that can be applied; one coming soon shows up once it's decorated. */}
+        {themes
+          .filter((t) => !comingSoon(t))
           .map((t) => {
             const status = themeStatus(t, themes, choice);
             const on = status === "applied" || status === "showing";
@@ -200,8 +200,8 @@ const BANNER_SCENES: Record<string, [string, string]> = {
   newroz: ["#14532d", "#b91c1c"],
   eid: ["#3b2a07", "#a16207"],
   ramadan: ["#0b2a3a", "#134e4a"],
+  "new-year": ["#1e1b4b", "#3730a3"],
   "language-day": ["#422006", "#b45309"],
-  "new-year": ["#1e1b4b", "#6d28d9"],
   birthday: ["#500724", "#be185d"],
   diwali: ["#431407", "#c2410c"],
   "lantern-festival": ["#450a0a", "#b91c1c"],
