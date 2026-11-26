@@ -174,7 +174,7 @@ html.dark .dagwick {
 .dagwick-dispute { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--dagwick-muted); text-decoration: underline; text-underline-offset: 2px; }
 .dagwick-dispute:hover, .dagwick-dispute:focus-visible { color: var(--dagwick-accent-text); }
 .dagwick-clear { padding: 28px; text-align: center; color: var(--dagwick-muted); }
-.dagwick-foot { font-size: 12px; margin-top: 12px; text-align: right; }
+.dagwick-foot { font-size: 12px; margin-top: 12px; text-align: center; text-wrap: balance; }
 .dagwick-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 16px; text-align: center; }
 .dagwick-empty h3 { margin: 8px 0 0; }
 
