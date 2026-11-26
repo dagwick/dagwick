@@ -46,7 +46,7 @@ dagwick = "dagwick.plugin:DagwickPlugin"
 # Development only (never published as a dependency): tests and the local sandbox.
 [dependency-groups]
 dev = [
-  "apache-airflow==3.3.2",
+  "apache-airflow==3.4.0",
   "pytest>=8",
   "pytest-cov>=6",
   "ruff>=0.14",

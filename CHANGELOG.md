@@ -92,6 +92,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **Tested on Airflow 3.3 and 3.4** (#112). CI now runs the test suite on
+  Airflow 3.1.8, 3.2.2, 3.3.2 and 3.4.0, and the development environment and
+  `./dev/run.sh` use Airflow 3.4.0. No code changes were needed. On Airflow
+  3.4 the Dagwick tab opens in the DAG page's side panel, like Airflow's own
+  tabs.
 - **Dagwick presents itself as a DAG linter.** The README and the PyPI
   summary now lead with linting and fixing DAG files; the Airflow UI is the
   other half. The pre-commit example uses `rev: v0.3.0`.
