@@ -221,7 +221,7 @@ THEMES: tuple[Theme, ...] = (
         id="newroz",
         name="Newroz",
         description="The Kurdish sun rises over Airflow, bonfires burn on the mountains "
-        "along the bottom, and embers drift up from them.",
+        "along the bottom with sparks rising, and nergiz and red tulips sway in the corners.",
         start=(3, 19),
         end=(3, 23),
         css=newroz.global_css,

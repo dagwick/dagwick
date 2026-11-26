@@ -1,9 +1,10 @@
 """Newroz for the whole Airflow UI, drawn with CSS only (used by the Newroz theme).
 
-Dawn breaks behind three ranges of mountains along the bottom of the window, the
-nearer ones darker and the farther ones lost in haze. Bonfires burn on four peaks:
+Dawn breaks behind three ranges of mountains along the bottom of the window, drawn
+as fine ridgelines so the page shows through them. Bonfires burn on four peaks:
 their flames flicker, their light breathes on the hillsides and sparks rise from
-them. The Kurdish sun, with its 21 rays, turns slowly in the top-right corner.
+them. Nergiz (narcissus) and red tulips sway in the bottom corners, and the Kurdish
+sun, with its 21 rays, turns slowly in the top-right corner.
 
 Everything is drawn above the page but ignores the mouse, stays below Airflow's menus
 and dialogs, and leaves the sidebar on top. Movement uses CSS transforms, fades or a
@@ -36,18 +37,10 @@ Point = tuple[float, float]
 
 # (name, highest peak, lowest valley, points across one repeat): far to near.
 RANGES = (("far", 18, 58, 9), ("mid", 34, 70, 7), ("near", 52, 84, 6))
-COLOURS = {
-    # range: (top, bottom) of its fill, dark then light Airflow
-    "dark": {
-        "far": ("#3c6e74", "#25494f"),
-        "mid": ("#21573f", "#173d2c"),
-        "near": ("#123a24", "#0b2416"),
-    },
-    "light": {
-        "far": ("#d8ece6", "#c3e0d6"),
-        "mid": ("#a9d9ba", "#8dcaa3"),
-        "near": ("#6fb98a", "#4fa26f"),
-    },
+LINES = {
+    # range: (colour, opacity) of its outline; the near range catches the firelight
+    "dark": {"far": ("#a7d3c2", 0.22), "mid": ("#a7d3c2", 0.36), "near": ("#fbbf24", 0.42)},
+    "light": {"far": ("#3f7f68", 0.25), "mid": ("#3f7f68", 0.4), "near": ("#c2410c", 0.45)},
 }
 
 
@@ -63,16 +56,16 @@ def ridge_points(rng: random.Random, top: float, bottom: float, count: int) -> l
     return pts
 
 
-def smooth_path(pts: list[Point]) -> str:
-    """A closed shape under a smooth line through the points (Catmull-Rom as Béziers)."""
-    out = [f"M0 {H} L{pts[0][0]:.1f} {pts[0][1]:.1f}"]
+def smooth_line(pts: list[Point]) -> str:
+    """A smooth line through the points (Catmull-Rom as Béziers)."""
+    out = [f"M{pts[0][0]:.1f} {pts[0][1]:.1f}"]
     ext = [(pts[-2][0] - W, pts[-2][1]), *pts, (pts[1][0] + W, pts[1][1])]
     for i in range(1, len(ext) - 2):
         p0, p1, p2, p3 = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
         c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
         c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
         out.append(f"C{c1[0]:.1f} {c1[1]:.1f} {c2[0]:.1f} {c2[1]:.1f} {p2[0]:.1f} {p2[1]:.1f}")
-    return " ".join(out) + f" L{W} {H}Z"
+    return " ".join(out)
 
 
 def ranges() -> tuple[dict[str, list[Point]], list[tuple[float, float, float]]]:
@@ -88,17 +81,26 @@ def ranges() -> tuple[dict[str, list[Point]], list[tuple[float, float, float]]]:
 
 
 def mountains_svg(theme: str) -> str:
-    """One repeat of the three ranges, each with a soft gradient, and the fires' logs."""
+    """One repeat of the three ranges as fine lines, and the fires' logs.
+
+    Only the ridgelines are drawn, with a faint shade fading out beneath them, so the
+    page shows through the mountains.
+    """
     ridges, fires = ranges()
     defs, shapes = [], []
     for name, *_ in RANGES:
-        top, bottom = COLOURS[theme][name]
+        colour, alpha = LINES[theme][name]
+        line = smooth_line(ridges[name])
         defs.append(
             f"<linearGradient id='{name}' x1='0' y1='0' x2='0' y2='1'>"
-            f"<stop offset='0' stop-color='{top}'/><stop offset='1' stop-color='{bottom}'/>"
-            "</linearGradient>"
+            f"<stop offset='0' stop-color='{colour}' stop-opacity='{alpha / 4:.2f}'/>"
+            f"<stop offset='.6' stop-color='{colour}' stop-opacity='0'/></linearGradient>"
         )
-        shapes.append(f"<path d='{smooth_path(ridges[name])}' fill='url(#{name})'/>")
+        shapes.append(
+            f"<path d='{line} L{W} {H} L0 {H}Z' fill='url(#{name})'/>"
+            f"<path d='{line}' fill='none' stroke='{colour}' stroke-opacity='{alpha}' "
+            "stroke-width='1.4' stroke-linecap='round'/>"
+        )
     logs = "".join(
         f"<path d='M{x - 8 * s:.1f} {y + 2 * s:.1f} L{x + 8 * s:.1f} {y - 1 * s:.1f} "
         f"M{x - 8 * s:.1f} {y - 1 * s:.1f} L{x + 8 * s:.1f} {y + 2 * s:.1f}' "
@@ -211,7 +213,77 @@ def sun_svg(size: int) -> str:
     )
 
 
-MOVING = ("html::before", "html::after", "body::after", "#root::before")
+FLOWERS_W, FLOWERS_H = 132, 58
+STEM = "#4d7c4f"
+
+
+def _stem(x: float, top: float, bend: float) -> str:
+    return (
+        f"<path d='M{x:.1f} {FLOWERS_H} Q{x + bend:.1f} {(FLOWERS_H + top) / 2:.1f} "
+        f"{x:.1f} {top:.1f}' fill='none' stroke='{STEM}' stroke-width='1.6' "
+        "stroke-linecap='round'/>"
+    )
+
+
+def _leaf(x: float, side: int, length: float) -> str:
+    tip = x + side * length * 0.45
+    return (
+        f"<path d='M{x:.1f} {FLOWERS_H} Q{x + side * 2:.1f} {FLOWERS_H - length * 0.6:.1f} "
+        f"{tip:.1f} {FLOWERS_H - length:.1f} Q{x + side * length * 0.2:.1f} "
+        f"{FLOWERS_H - length * 0.4:.1f} {x + side * 3:.1f} {FLOWERS_H}Z' fill='#5f8f52'/>"
+    )
+
+
+def nergiz(x: float, y: float, s: float) -> str:
+    """A narcissus (nêrgiz), the flower of Kurdish spring: six white petals, a gold cup."""
+    petals = "".join(
+        f"<ellipse cx='0' cy='{-4.2 * s:.1f}' rx='{2.6 * s:.1f}' ry='{4.4 * s:.1f}' "
+        f"transform='rotate({a})' fill='#fffdf5' stroke='#d9c78f' stroke-width='.6'/>"
+        for a in range(0, 360, 60)
+    )
+    return (
+        f"<g transform='translate({x:.1f} {y:.1f})'>{petals}"
+        f"<circle r='{2.6 * s:.1f}' fill='#f59e0b'/><circle r='{1.3 * s:.1f}' fill='#fde047'/></g>"
+    )
+
+
+def tulip(x: float, y: float, s: float) -> str:
+    """A red mountain tulip."""
+    return (
+        f"<g transform='translate({x:.1f} {y:.1f}) scale({s:.2f})'>"
+        "<path d='M-5 -2 C-6 -9 -4 -13 -3 -14 L-1 -10 L0 -15 L1 -10 L3 -14 C4 -13 6 -9 5 -2 "
+        "C4 1 -4 1 -5 -2Z' fill='#dc2626'/>"
+        "<path d='M0 -15 L1 -10 L3 -14 C4 -13 6 -9 5 -2 C4 1 1 1 0 0Z' fill='#b91c1c'/></g>"
+    )
+
+
+def flowers_svg(seed: int) -> str:
+    """A small bunch of nergiz and red tulips, for a bottom corner of the window."""
+    rng = random.Random(seed)
+    parts, heads = [], []
+    for i in range(5):
+        x = 14 + i * 26 + rng.uniform(-4, 4)
+        top = rng.uniform(12, 30)
+        parts.append(_stem(x, top, rng.uniform(-4, 4)))
+        parts.append(_leaf(x, rng.choice((-1, 1)), rng.uniform(14, 24)))
+        s = rng.uniform(0.75, 0.9)
+        heads.append(nergiz(x, top, s) if i % 3 != 1 else tulip(x, top + 4, s))
+    return (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{FLOWERS_W}' height='{FLOWERS_H}'>"
+        f"{''.join(parts)}{''.join(heads)}</svg>"
+    )
+
+
+FLOWERS_LEFT = '[data-testid="main-content"]::before'
+FLOWERS_RIGHT = '[data-testid="main-content"]::after'
+MOVING = (
+    "html::before",
+    "html::after",
+    "body::after",
+    "#root::before",
+    FLOWERS_LEFT,
+    FLOWERS_RIGHT,
+)
 
 
 def global_css() -> dict[str, Any]:
@@ -228,6 +300,14 @@ def global_css() -> dict[str, Any]:
         "backgroundSize": f"{W}px {H}px",
     }
     sun = 190
+    flowers = {
+        **layer,
+        "bottom": "0",
+        "width": f"{FLOWERS_W}px",
+        "height": f"{FLOWERS_H}px",
+        "transformOrigin": "50% 100%",
+        "willChange": "transform",
+    }
     return {
         # Sparks rising from the fires (painted first, so the hills cover their start).
         "html::before": {
@@ -251,10 +331,9 @@ def global_css() -> dict[str, Any]:
             "left": "0",
             "right": "0",
             "bottom": "0",
-            "height": "240px",
+            "height": "180px",
             "backgroundImage": "radial-gradient(ellipse 70% 100% at 50% 100%, "
-            "rgba(251, 146, 60, 0.16), transparent 70%), "
-            "linear-gradient(to top, rgba(22, 163, 74, 0.10), transparent)",
+            "rgba(251, 146, 60, 0.12), transparent 70%)",
         },
         # The sun in the corner, turning slowly.
         "#root::before": {
@@ -274,10 +353,24 @@ def global_css() -> dict[str, Any]:
             "to": {"transform": "rotate(360deg)"},
         },
         # The mountains, see-through enough that text behind them stays readable.
-        "#root::after": {**band, "backgroundImage": url(mountains_svg("dark")), "opacity": "0.8"},
-        "html.light #root::after": {
-            "backgroundImage": url(mountains_svg("light")),
-            "opacity": "0.75",
+        "#root::after": {**band, "backgroundImage": url(mountains_svg("dark"))},
+        "html.light #root::after": {"backgroundImage": url(mountains_svg("light"))},
+        # Nergiz and red tulips in the bottom corners, swaying in the spring wind.
+        FLOWERS_LEFT: {
+            **flowers,
+            "left": "72px",
+            "backgroundImage": url(flowers_svg(SEED + 3)),
+            "animation": "dagwickSway 6s ease-in-out infinite alternate",
+        },
+        FLOWERS_RIGHT: {
+            **flowers,
+            "right": "8px",
+            "backgroundImage": url(flowers_svg(SEED + 4)),
+            "animation": "dagwickSway 7s ease-in-out -3s infinite alternate",
+        },
+        "@keyframes dagwickSway": {
+            "from": {"transform": "rotate(-1.5deg)"},
+            "to": {"transform": "rotate(1.5deg)"},
         },
         # Firelight on the hillsides, breathing.
         "body::after": {

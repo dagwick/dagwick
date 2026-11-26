@@ -309,9 +309,28 @@ function NewrozScene() {
       <circle cx="182" cy="30" r="24" fill="#fde68a" opacity=".12" />
       <path d={rays} fill="#fbbf24" />
       <circle cx="182" cy="30" r="8" fill="#fbbf24" />
-      <path d="M0 70 C24 60 40 52 64 56 S104 72 128 60 S176 44 220 58 V110 H0Z" fill="#3c6e74" opacity=".7" />
-      <path d="M0 84 C20 76 40 70 66 66 S112 80 150 72 S200 82 220 78 V110 H0Z" fill="#21573f" />
-      <path d="M0 98 C30 92 50 86 80 90 S140 100 170 94 S210 92 220 96 V110 H0Z" fill="#123a24" />
+      <g fill="none" strokeWidth="1.2" strokeLinecap="round">
+        <path d="M0 70 C24 60 40 52 64 56 S104 72 128 60 S176 44 220 58" stroke="#a7d3c2" opacity=".35" />
+        <path d="M0 84 C20 76 40 70 66 66 S112 80 150 72 S200 82 220 78" stroke="#a7d3c2" opacity=".55" />
+        <path d="M0 98 C30 92 50 86 80 90 S140 100 170 94 S210 92 220 96" stroke="#fbbf24" opacity=".6" />
+      </g>
+      {[
+        [18, 92, "n"],
+        [28, 96, "t"],
+        [200, 94, "n"],
+      ].map(([x, y, kind]) => (
+        <g key={x} transform={`translate(${x} ${y})`}>
+          <path d={`M0 0 V${110 - Number(y)}`} stroke="#4d7c4f" strokeWidth="1.2" />
+          {kind === "t" ? (
+            <path d="M-3 -1 C-4 -6 -2 -8 0 -9 C2 -8 4 -6 3 -1 C2 1 -2 1 -3 -1Z" fill="#dc2626" />
+          ) : (
+            <>
+              <circle r="3.4" fill="#fffdf5" />
+              <circle r="1.4" fill="#f59e0b" />
+            </>
+          )}
+        </g>
+      ))}
       {fires.map(([x, y]) => (
         <g key={x} transform={`translate(${x} ${y})`}>
           <circle cy="-6" r="16" fill="url(#dagwick-nz-glow)" />

@@ -19,8 +19,9 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - **A Newroz theme for all of Airflow** (19–23 March). The Kurdish sun with
-  its 21 rays rises in the corner, bonfires burn on mountains along the bottom
-  of the window, and embers drift up from them. Like Christmas and Halloween it
+  its 21 rays turns slowly in the corner, bonfires flicker on mountains drawn
+  as fine lines along the bottom (so the page shows through), sparks rise from
+  them, and nergiz and red tulips sway in the bottom corners. Like Christmas and Halloween it
   shows by itself on its dates, can be applied any day from the **Themes** tab,
   stays out of the way of clicks and Airflow's menus, and stands still for
   viewers who prefer reduced motion.
