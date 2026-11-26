@@ -346,6 +346,7 @@ html.dark .dagwick {
 .dagwick-dd-sep { height: 1px; margin: 4px 6px; background: var(--dagwick-border); }
 @media (prefers-reduced-motion: reduce) { .dagwick-dd-list { animation: none; } }
 .dagwick-fleet-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.dagwick-fleet-grid > .dagwick-foot { grid-column: 1; margin-top: 0; }
 .dagwick-toolbar { display: flex; gap: 10px; align-items: center; padding: 10px; border-bottom: 1px solid var(--dagwick-border); background: var(--dagwick-surface); flex-wrap: wrap; }
 .dagwick-search-wrap { position: relative; flex: 0 0 260px; width: 260px; color: var(--dagwick-muted); }
 .dagwick-search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; }
