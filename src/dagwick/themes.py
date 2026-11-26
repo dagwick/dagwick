@@ -24,7 +24,7 @@ from functools import cache
 from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
-from dagwick import halloween, new_year, snow
+from dagwick import halloween, snow
 
 log = logging.getLogger(__name__)
 
@@ -191,7 +191,7 @@ THEMES: tuple[Theme, ...] = (
         description="Snowflakes drift over Airflow, some carried sideways by the wind, "
         "with a snow drift along the bottom of the window.",
         start=(12, 18),
-        end=(12, 30),  # New Year has 31 Dec - 2 Jan
+        end=(1, 2),
         css=snow.global_css,
     ),
     Theme(
@@ -241,15 +241,7 @@ THEMES: tuple[Theme, ...] = (
         start=(5, 15),
         end=(5, 15),
     ),
-    Theme(
-        id="new-year",
-        name="New Year",
-        description="A calm midnight sky behind Airflow: soft gold fireworks bloom and fade, "
-        "stars twinkle, and a warm glow rises from the bottom. Nothing covers the page.",
-        start=(12, 31),
-        end=(1, 2),
-        css=new_year.global_css,
-    ),
+    Theme(id="new-year", name="New Year", description=COMING_SOON, start=(12, 31), end=(1, 2)),
 )
 BY_ID = {t.id: t for t in THEMES}
 

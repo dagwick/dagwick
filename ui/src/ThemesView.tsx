@@ -192,7 +192,6 @@ function Themes({ themes }: { themes: ThemeInfo[] }) {
 function Scene({ id }: { id: string }) {
   if (id === "halloween") return <HalloweenScene />;
   if (id === "christmas") return <SnowScene />;
-  if (id === "new-year") return <NewYearScene />;
   return <BannerScene id={id} />;
 }
 
@@ -201,6 +200,7 @@ const BANNER_SCENES: Record<string, [string, string]> = {
   newroz: ["#14532d", "#b91c1c"],
   eid: ["#3b2a07", "#a16207"],
   ramadan: ["#0b2a3a", "#134e4a"],
+  "new-year": ["#1e1b4b", "#3730a3"],
   "language-day": ["#422006", "#b45309"],
   birthday: ["#500724", "#be185d"],
   diwali: ["#431407", "#c2410c"],
@@ -271,54 +271,6 @@ function HalloweenScene() {
       ))}
       <ellipse cx="60" cy="104" rx="90" ry="14" fill="#7c3aed" opacity=".35" />
       <ellipse cx="170" cy="106" rx="80" ry="12" fill="#4c1d95" opacity=".45" />
-    </svg>
-  );
-}
-
-/** The New Year theme's picture: soft fireworks and stars in a midnight sky. */
-function NewYearScene() {
-  const bursts: [number, number, number, string, string][] = [
-    [62, 40, 26, "#f59e0b", "#fef3c7"],
-    [158, 34, 20, "#e11d48", "#fecdd3"],
-    [112, 66, 14, "#60a5fa", "#f8fafc"],
-  ];
-  const stars: [number, number, number][] = [
-    [22, 18, 1.1],
-    [96, 12, 0.9],
-    [196, 22, 1.2],
-    [34, 70, 0.8],
-    [180, 64, 1],
-    [140, 90, 0.8],
-    [70, 94, 0.9],
-  ];
-  return (
-    <svg className="dagwick-theme-scene" viewBox="0 0 220 110" role="img" aria-label="Soft gold fireworks in a midnight sky">
-      <rect width="220" height="110" fill="#17133a" />
-      <rect y="70" width="220" height="40" fill="#f59e0b" opacity=".12" />
-      {bursts.map(([x, y, r, color, tip], b) => (
-        <g key={b} transform={`translate(${x} ${y})`} strokeLinecap="round">
-          <circle r={r * 0.16} fill={tip} opacity=".8" />
-          {Array.from({ length: 18 }, (_, i) => {
-            const a = (i / 18) * Math.PI * 2;
-            const droop = r * 0.22;
-            const ex = Math.cos(a) * r;
-            const ey = Math.sin(a) * r + droop * (0.6 + 0.4 * Math.abs(Math.cos(a)));
-            return (
-              <path
-                key={i}
-                d={`M${Math.cos(a) * r * 0.15} ${Math.sin(a) * r * 0.15} Q${Math.cos(a) * r * 0.6} ${Math.sin(a) * r * 0.6} ${ex} ${ey}`}
-                fill="none"
-                stroke={i % 3 === 0 ? tip : color}
-                strokeWidth="1"
-                opacity=".9"
-              />
-            );
-          })}
-        </g>
-      ))}
-      {stars.map(([x, y, r], i) => (
-        <circle key={i} cx={x} cy={y} r={r} fill="#fde68a" opacity=".7" />
-      ))}
     </svg>
   );
 }

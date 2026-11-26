@@ -24,15 +24,13 @@ IN_SEASON = date(2026, 12, 24)
 OUT_OF_SEASON = date(2026, 6, 1)
 
 
-def test_christmas_hands_over_to_new_year():
+def test_christmas_runs_over_new_year():
     assert CHRISTMAS.active_on(date(2026, 12, 18))
-    assert CHRISTMAS.active_on(date(2026, 12, 30))
+    assert CHRISTMAS.active_on(date(2027, 1, 2))
     assert not CHRISTMAS.active_on(date(2026, 12, 17))
-    assert not CHRISTMAS.active_on(date(2026, 12, 31))
-    assert pick_theme({}, date(2026, 12, 30)).id == "christmas"
-    for day in (date(2026, 12, 31), date(2027, 1, 1), date(2027, 1, 2)):
-        assert pick_theme({}, day).id == "new-year"
-    assert pick_theme({}, date(2027, 1, 3)) is None
+    assert not CHRISTMAS.active_on(date(2027, 1, 3))
+    # New Year has no decorations for Airflow, so Christmas snow shows over it.
+    assert pick_theme({}, date(2027, 1, 1)).id == "christmas"
 
 
 def test_pick_theme_by_date_removed_and_applied():
@@ -161,7 +159,7 @@ def test_themes_endpoint_lists_dates():
     if rows.status_code != 200:
         pytest.skip(f"auth override not supported here ({rows.status_code})")
     christmas = next(r for r in rows.json() if r["id"] == "christmas")
-    assert christmas["start"] == [12, 18] and christmas["end"] == [12, 30]
+    assert christmas["start"] == [12, 18] and christmas["end"] == [1, 2]
     assert isinstance(christmas["active"], bool)
 
 
@@ -260,8 +258,7 @@ def test_islamic_calendar_themes_use_their_listed_windows():
 
 
 def test_fixed_dates_in_words():
-    assert themes.BY_ID["christmas"].when(date(2026, 1, 1)) == "18 Dec – 30 Dec · every year"
-    assert themes.BY_ID["new-year"].when(date(2026, 1, 1)) == "31 Dec – 2 Jan · every year"
+    assert themes.BY_ID["christmas"].when(date(2026, 1, 1)) == "18 Dec – 2 Jan · every year"
     assert themes.BY_ID["language-day"].when(date(2026, 1, 1)) == "15 May · every year"
 
 
@@ -365,71 +362,3 @@ def test_middleware_only_touches_airflows_own_ui_config_route(path, root_path, m
     from dagwick.themes import _is_ui_config
 
     assert _is_ui_config({"path": path, "root_path": root_path}) is matches
-
-
-NEW_YEAR = date(2027, 1, 1)
-
-
-def test_new_year_is_decorated():
-    theme = themes.BY_ID["new-year"]
-    assert theme.ready
-    assert theme.info(NEW_YEAR)["decorated"] is True
-    assert "fireworks" in theme.description.lower()
-
-
-def test_new_year_fireworks_each_have_their_own_rhythm_and_stay_off_the_sidebar():
-    from dagwick import new_year
-
-    css = new_year.global_css()
-    rhythms = set()
-    for i, host in enumerate(new_year.BURST_HOSTS):
-        rule = css[host]
-        assert rule["animation"].startswith(f"dagwickFirework{i} ")
-        rhythms.add(rule["animation"])
-        left_vw = float(rule["left"].split("vw")[0].removeprefix("calc("))
-        assert left_vw >= 12  # clear of Airflow's 64 px sidebar on any normal screen
-        steps = css[f"@keyframes dagwickFirework{i}"]
-        # Only transform and opacity move, which the graphics card does without repainting.
-        assert {key for step in steps.values() for key in step} == {"opacity", "transform"}
-    assert len(rhythms) == len(new_year.BURST_HOSTS)
-
-
-def test_new_year_sits_behind_the_page_and_never_blocks_clicks():
-    from dagwick import new_year
-
-    css = new_year.global_css()
-    drawn = {sel: rule for sel, rule in css.items() if "content" in rule}
-    assert drawn
-    assert all(rule["pointerEvents"] == "none" for rule in drawn.values())
-    # Behind Airflow's page, so it never covers text, buttons or menus.
-    assert all(rule["zIndex"] == "-1" for rule in drawn.values())
-    # Nothing hangs off the sidebar: it would be drawn in the sidebar's layer, on top.
-    assert not any("nav-" in sel for sel in css)
-
-
-def test_new_year_stands_still_for_reduced_motion():
-    from dagwick import new_year
-
-    css = new_year.global_css()
-    still = css["@media (prefers-reduced-motion: reduce)"]
-    animated = [sel for sel, rule in css.items() if isinstance(rule, dict) and "animation" in rule]
-    assert animated
-    for sel in animated:
-        assert sel in still or any(sel in key.split(", ") for key in still)
-    bursts = still[", ".join(new_year.BURST_HOSTS)]
-    assert bursts["opacity"] != "0"  # the fireworks show as still bursts
-
-
-def test_new_year_leaves_the_cards_alone_and_stays_small():
-    css = themes.theme_css("new-year")
-    assert not any("card" in sel for sel in css)
-    sheets = themes.theme_sheets("new-year")
-    assert sheets["hide"] and sheets["reset"]  # can be switched off without a reload
-    assert len(sheets["css"]) < 100_000  # sent with Airflow's config on every page load
-
-
-def test_new_year_is_applied_by_date_and_by_hand():
-    res = _airflow()(NEW_YEAR).get("/ui/config")
-    assert "dagwickFirework0" in json.dumps(res.json()["theme"])
-    res = _airflow()(OUT_OF_SEASON).get("/ui/config", cookies={APPLIED_COOKIE: "new-year"})
-    assert "dagwickFirework0" in json.dumps(res.json()["theme"])

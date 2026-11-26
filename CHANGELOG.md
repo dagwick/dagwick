@@ -8,17 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- **New Year theme** (31 December to 2 January): a calm midnight sky behind
-  Airflow. Real-looking fireworks (a gold willow, a crimson peony, a silver-blue
-  chrysanthemum) bloom slowly, their streaks bending down and dropping
-  glitter; stars twinkle, and a
-  warm glow rises from the bottom of the window. Everything is drawn behind the
-  page, so it never covers text, buttons or menus. CSS only, moves on the
-  graphics card, and stands still for viewers who prefer reduced motion. The
-  banner's New Year look no longer looks like Dagwick's birthday: Wick wears a
-  black top hat with a gold band instead of a party hat, a gold clock at midnight
-  stands next to the candle, the sign is 🥂, and stars replace the confetti.
-  Christmas snow now ends on 30 December so New Year has its own days.
+- **New Year no longer looks like Dagwick's birthday.** On its dates the
+  banner's Wick wears a black top hat with a gold band instead of a party hat,
+  a gold clock at midnight stands next to the candle, the sign is 🥂, and gold
+  stars and fireworks replace the confetti.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
   check id only (never the DAG id, file or code; the link sends no referrer).
