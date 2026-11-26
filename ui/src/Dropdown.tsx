@@ -7,7 +7,8 @@ const TYPE_AHEAD_MS = 700;
 /**
  * A dropdown that looks like the native one when closed, with a styled list when open.
  * Keyboard: Enter/Space/↓ opens, ↑/↓ Home End PgUp PgDn move, letters jump to a match,
- * Enter picks, Esc closes. The first row ("All …") clears the filter.
+ * Enter picks, Esc closes. The first row ("All …") clears the filter, and so does
+ * the × shown in the box while a value is picked.
  */
 export function Dropdown({
   label,
@@ -114,6 +115,23 @@ export function Dropdown({
       >
         <span className="dagwick-dd-value">{value ?? (nothing ? empty : all)}</span>
       </button>
+      {value && (
+        <button
+          type="button"
+          className="dagwick-dd-clear"
+          aria-label={`Clear: ${all}`}
+          title={all}
+          onClick={() => {
+            setOpen(false);
+            onChange(undefined);
+            button.current?.focus();
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
       {open && (
         <ul
           ref={list}

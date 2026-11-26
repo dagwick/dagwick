@@ -314,6 +314,14 @@ html.dark .dagwick {
 }
 .dagwick-dd > .dagwick-select { width: 100%; text-align: left; }
 .dagwick-dd-value { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dagwick-dd > .dagwick-select.is-set { background-image: none; }
+.dagwick-dd-clear {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: grid; place-items: center;
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; cursor: pointer;
+  color: var(--dagwick-muted); background: transparent;
+}
+.dagwick-dd-clear:hover { color: var(--dagwick-text); background: var(--dagwick-surface); }
+.dagwick-dd-clear:focus-visible { outline: 2px solid var(--dagwick-accent); outline-offset: 1px; color: var(--dagwick-text); }
 .dagwick-dd-list {
   position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; min-width: max(100%, 240px); max-height: 320px; overflow-y: auto;
   margin: 0; padding: 6px; list-style: none; color: var(--dagwick-text); background: var(--dagwick-bg); outline: none;

@@ -128,6 +128,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **The owner and tag filters on the fleet page can be cleared with one
+  click:** while a filter is set, an × in the box resets it to "All owners" or
+  "All tags".
 - **The footer on the fleet page and the DAG tab** no longer says grades come
   only from "the latest parsed version" of each DAG. Two checks (sensors and
   late runs) also use recent runs, and the fleet footer now says that the
