@@ -24,7 +24,7 @@ from functools import cache
 from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
-from dagwick import halloween, snow
+from dagwick import halloween, newroz, snow
 
 log = logging.getLogger(__name__)
 
@@ -217,7 +217,15 @@ THEMES: tuple[Theme, ...] = (
         end=(11, 1),
         css=halloween.global_css,
     ),
-    Theme(id="newroz", name="Newroz", description=COMING_SOON, start=(3, 19), end=(3, 23)),
+    Theme(
+        id="newroz",
+        name="Newroz",
+        description="The Kurdish sun rises over Airflow, bonfires burn on the mountains "
+        "along the bottom, and embers drift up from them.",
+        start=(3, 19),
+        end=(3, 23),
+        css=newroz.global_css,
+    ),
     Theme(id="eid", name="Eid", description=COMING_SOON, windows=EID),
     Theme(
         id="carsema-sor",
