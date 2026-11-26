@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **New Year no longer looks like Dagwick's birthday.** On its dates the
+  banner's Wick wears a black top hat with a gold band instead of a party hat,
+  a gold clock at midnight stands next to the candle, the sign is 🥂, and gold
+  stars and fireworks replace the confetti.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
   check id only (never the DAG id, file or code; the link sends no referrer).
@@ -92,6 +96,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- **The Themes page lists only themes you can apply** (Christmas snow,
+  Halloween, New Year). The "Coming soon" cards are gone; each of those themes
+  appears there once its decorations are made. Dagwick's banner still dresses
+  up on their dates.
 - **Dagwick presents itself as a DAG linter.** The README and the PyPI
   summary now lead with linting and fixing DAG files; the Airflow UI is the
   other half. The pre-commit example uses `rev: v0.3.0`.

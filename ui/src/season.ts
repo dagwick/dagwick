@@ -53,7 +53,7 @@ export const SEASONS: Record<SeasonId, Season> = {
     id: "new-year",
     name: "New Year",
     greeting: "Happy New Year!",
-    icon: "🎉",
+    icon: "🥂",
   },
   halloween: { id: "halloween", name: "Halloween", greeting: "Happy Halloween!", icon: "🎃" },
   ramadan: {

@@ -20,8 +20,8 @@ in [issues](https://github.com/dagwick/dagwick/issues).
 - [ ] **1.0**, once the check interface is stable, so check-pack authors can
       rely on it.
 - [ ] **Scores as metrics** for dashboards, next to the existing CSV download.
-- [ ] **More built-in themes:** Newroz, Kurdish Language Day, Eid, Ramadan and
-      New Year (now "Coming soon" on the Themes page).
+- [ ] **More built-in themes:** New Year, Ramadan, Eid, Newroz and Kurdish Language Day
+      (for now, only Dagwick's banner dresses up on their dates).
 - [ ] **Translations of the UI**, starting with Kurdish.
 
 ### Project health (ongoing)

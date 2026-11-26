@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import random
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from fastapi import FastAPI
@@ -29,6 +29,8 @@ def test_christmas_runs_over_new_year():
     assert CHRISTMAS.active_on(date(2027, 1, 2))
     assert not CHRISTMAS.active_on(date(2026, 12, 17))
     assert not CHRISTMAS.active_on(date(2027, 1, 3))
+    # New Year has no decorations for Airflow, so Christmas snow shows over it.
+    assert pick_theme({}, date(2027, 1, 1)).id == "christmas"
 
 
 def test_pick_theme_by_date_removed_and_applied():
@@ -260,9 +262,16 @@ def test_fixed_dates_in_words():
     assert themes.BY_ID["language-day"].when(date(2026, 1, 1)) == "15 May · every year"
 
 
-def test_overlapping_themes_show_the_earlier_one():
-    # New Year (31 Dec - 2 Jan) falls inside Christmas (18 Dec - 2 Jan).
-    assert pick_theme({}, date(2027, 1, 1)).id == "christmas"
+def test_a_theme_applied_by_hand_wins_over_the_theme_of_the_day():
+    assert pick_theme({APPLIED_COOKIE: "christmas"}, date(2027, 1, 1)).id == "christmas"
+
+
+def test_decorated_themes_never_share_a_day():
+    day = date(2026, 1, 1)
+    while day < date(2028, 1, 1):
+        ready = [t.id for t in themes.THEMES if t.ready and t.active_on(day)]
+        assert len(ready) <= 1, (day, ready)
+        day += timedelta(days=1)
 
 
 def test_banner_only_themes_leave_airflow_untouched():
