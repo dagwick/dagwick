@@ -98,6 +98,7 @@ class CheckSpec:
     why: str = ""  # the failure the check prevents (dagwick explain, docs, DAG tab)
     bad: str = ""  # code that breaks the check; ``example`` shows the fix
     ack_when: str = ""  # when breaking the check on purpose is fine
+    code: str = ""  # the rule code, e.g. DW101; a check pack's check uses its id
 
 
 @dataclass(frozen=True)
@@ -116,6 +117,7 @@ class CheckResult:
     ack_note: str = ""  # why a "# dagwick: ack" comment for this check was ignored
     pack: str = BUILTIN_PACK  # the distribution that registered the check
     why: str = ""  # why the check matters; set only when the check needs work
+    code: str = ""  # the rule code, e.g. DW101
 
 
 _REGISTRY: dict[str, CheckSpec] = {}
@@ -145,6 +147,7 @@ def check(
     why: str = "",
     bad: str = "",
     ack_when: str = "",
+    code: str = "",
 ) -> Callable[[Callable[[Any], Finding]], Callable[[Any], Finding]]:
     """Register a DAG check.
 
@@ -157,6 +160,8 @@ def check(
     ``why`` explains the failure the check prevents, ``bad`` is code that breaks
     it, and ``ack_when`` says when breaking it on purpose is fine. They are shown
     by ``dagwick explain``, in the docs and in the DAG tab; all three are optional.
+    ``code`` is the short rule code ``dagwick check`` prints, selects and ignores (for
+    example ``DW101``); it defaults to the check's ``id``.
     A check function takes the DAG, and optionally a :class:`Context` as a
     second parameter.
     Re-registering the same ``id`` replaces the previous check, which lets a
@@ -182,6 +187,7 @@ def check(
             why,
             bad,
             ack_when,
+            code or id,
         )
         return func
 
@@ -319,6 +325,7 @@ def score_dag(
                 ack_note=ack_note,
                 pack=spec.pack,
                 why=spec.why if needs_work else "",
+                code=spec.code,
             )
         )
 

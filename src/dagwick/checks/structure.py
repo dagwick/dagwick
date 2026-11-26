@@ -12,6 +12,7 @@ SNAKE = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)*$")  # dots come from task groups
 
 @check(
     id="decomposition",
+    code="DW501",
     why=(
         "A DAG with a single task does everything in one step. A failure near the end "
         "reruns the whole job, and Airflow can't show which part is slow or broken."
@@ -43,6 +44,7 @@ def _neighbours(task: Any) -> set[str]:
 
 @check(
     id="isolated_tasks",
+    code="DW505",
     why=(
         "A task with no upstream and no downstream task is usually a forgotten >>. Airflow "
         "runs it as soon as the DAG run begins, in parallel with everything else, so it can "
@@ -103,6 +105,7 @@ def isolated_tasks(dag: Any) -> Finding:
 
 @check(
     id="naming",
+    code="DW502",
     why=(
         "dag_ids and task_ids show up in URLs, logs, metric names and CLI commands. "
         "snake_case ids are consistent and easy to type, search and grep; a mix of styles"
@@ -127,6 +130,7 @@ def naming(dag: Any) -> Finding:
 
 @check(
     id="file_name",
+    code="DW503",
     why=(
         "When a DAG fails, people search the repository for its dag_id. A file named "
         "after the DAG puts its code one step away. Files that define several DAGs (DAG "
@@ -155,6 +159,7 @@ def file_name(dag: Any, context: Context) -> Finding:
 
 @check(
     id="current_imports",
+    code="DW504",
     why=(
         "Airflow 3 moved many classes: operators to provider packages, the DAG authoring "
         "API to airflow.sdk. The old paths still work through deprecation shims that a "

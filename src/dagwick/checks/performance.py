@@ -26,6 +26,7 @@ def parse_status(seconds: float | None) -> Status:
 
 @check(
     id="parse_time",
+    code="DW601",
     why=(
         "Airflow re-parses every DAG file every few minutes, so top-level code runs on "
         "every parse, not once. Slow files delay every change from showing up, and a file"
@@ -62,6 +63,7 @@ def parse_time(dag: Any, context: Context) -> Finding:
 
 @check(
     id="parse_time_variables",
+    code="DW602",
     why=(
         "Each Variable.get at parse time is a metadata-database or secrets-backend call "
         "on every parse: thousands a day for one file. It slows parsing and loads the "
@@ -102,6 +104,7 @@ def _minutes(seconds: float) -> str:
 
 @check(
     id="sensor_slots",
+    code="DW603",
     why=(
         "A sensor in poke mode holds a worker slot for its whole wait, doing nothing. Ten"
         " sensors that each wait an hour take ten slots that real tasks need. A "

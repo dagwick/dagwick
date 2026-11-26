@@ -27,6 +27,7 @@ def _failure_callback(task: Any) -> bool:
 
 @check(
     id="failure_alerts",
+    code="DW201",
     why=(
         "A DAG that fails without telling anyone keeps failing until someone notices "
         "stale data, often days later and often a user of the data. A failure callback, "
@@ -68,6 +69,7 @@ def failure_alerts(dag: Any) -> Finding:
 
 @check(
     id="retry_alerts",
+    code="DW202",
     why=(
         "A task that only succeeds on its second or third try works today and fails "
         "tomorrow. A retry notification shows the flakiness while there is still time to "
