@@ -306,16 +306,6 @@ function NewrozScene() {
         </radialGradient>
       </defs>
       <rect width="220" height="110" fill="url(#dagwick-nz-sky)" />
-      {/* Akre: torchbearers climbing the mountain to the fire on its summit */}
-      <path
-        d="M0 110 L0 80 C30 72 58 58 78 48 C90 42 100 34 108 28 L114 30 C128 40 150 52 170 60 C190 68 205 72 220 74 V110Z"
-        fill="#0c1322"
-      />
-      <g fill="none" stroke="#ffb347" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="0 4">
-        <path d="M64 110 L92 92 L76 80 L98 64 L90 52 L110 29" />
-        <path d="M178 110 L148 92 L162 78 L132 62 L140 48 L110 29" />
-      </g>
-      <circle cx="110" cy="28" r="14" fill="url(#dagwick-nz-glow)" />
       <circle cx="182" cy="30" r="24" fill="#fde68a" opacity=".12" />
       <path d={rays} fill="#fbbf24" />
       <circle cx="182" cy="30" r="8" fill="#fbbf24" />

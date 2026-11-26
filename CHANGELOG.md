@@ -18,9 +18,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- **A Newroz theme for all of Airflow** (19–23 March), after Newroz night in
-  Akre: behind the page, rivers of torchbearers climb the mountain to a great
-  fire on its summit above the town lights. The Kurdish sun with
+- **A Newroz theme for all of Airflow** (19–23 March). A greeting at the foot
+  of the window, "Newroz pîroz be · نەورۆز پیرۆز بێت · Happy Newroz", sits on a
+  thin stripe in the colours of the Kurdish flag. The Kurdish sun with
   its 21 rays turns slowly in the corner, bonfires flicker on mountains drawn
   as fine lines along the bottom (so the page shows through), sparks rise from
   them, and nergiz and red tulips sway in the bottom corners. Like Christmas and Halloween it
