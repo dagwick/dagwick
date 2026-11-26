@@ -284,12 +284,11 @@ SUMMIT = (1010, 190)
 TRAILS = (
     ((470, 760), (720, 660), (560, 590), (830, 500), (690, 420), (900, 340), (820, 270), SUMMIT),
     ((1420, 760), (1190, 650), (1330, 560), (1100, 470), (1210, 390), (1050, 300), SUMMIT),
-    ((900, 760), (1010, 690), (940, 620)),  # the newest climbers, still near the town
 )
 AKRE = {
     # mountain, its far neighbour, the sky's glow, the rim light, torches, window light
-    "dark": ("#0c1322", "#111b2e", "rgba(251, 146, 60, 0.22)", "#fb923c", "#ffb347", "#fbbf24"),
-    "light": ("#f3e3d3", "#f7ece1", "rgba(251, 146, 60, 0.20)", "#ea580c", "#f97316", "#f59e0b"),
+    "dark": ("#0c1322", "#111b2e", "rgba(251, 146, 60, 0.12)", "#fb923c", "#ffb347", "#fbbf24"),
+    "light": ("#f3e3d3", "#f7ece1", "rgba(251, 146, 60, 0.10)", "#ea580c", "#f97316", "#f59e0b"),
 }
 
 
@@ -320,9 +319,7 @@ def akre_svg(theme: str, moving: bool = True) -> str:
             else ""
         )
         trails.append(
-            f"<path d='{d}' fill='none' stroke='{torch}' stroke-opacity='.18' "
-            "stroke-width='8' stroke-linejoin='round' filter='url(#blur)'/>"
-            f"<path d='{d}' fill='none' stroke='{torch}' stroke-width='2.6' stroke-opacity='.85' "
+            f"<path d='{d}' fill='none' stroke='{torch}' stroke-width='2' stroke-opacity='.7' "
             f"stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='0 16'>{march}</path>"
         )
     windows = "".join(
@@ -342,7 +339,7 @@ def akre_svg(theme: str, moving: bool = True) -> str:
     return (
         f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {AKRE_W} {AKRE_H}' "
         "preserveAspectRatio='xMidYMax slice'>"
-        "<defs><filter id='blur'><feGaussianBlur stdDeviation='4'/></filter>"
+        "<defs>"
         f"<radialGradient id='sky' cx='{sx / AKRE_W:.2f}' cy='{sy / AKRE_H:.2f}' r='.75'>"
         f"<stop offset='0' stop-color='{glow}'/><stop offset='1' stop-color='{glow}' "
         "stop-opacity='0'/></radialGradient>"
@@ -354,7 +351,7 @@ def akre_svg(theme: str, moving: bool = True) -> str:
         f"<path d='{ridge}' fill='{mountain}' stroke='{rim}' stroke-opacity='.35' "
         "stroke-width='2'/>"
         f"{''.join(trails)}"
-        f"<circle cx='{sx}' cy='{sy}' r='60' fill='url(#fire)' opacity='.9'/>"
+        f"<circle cx='{sx}' cy='{sy}' r='38' fill='url(#fire)' opacity='.7'/>"
         f"<circle cx='{sx}' cy='{sy}' r='16' fill='url(#fire)'/>"
         f"{windows}</svg>"
     )
@@ -418,16 +415,19 @@ def global_css() -> dict[str, Any]:
         AKRE_HOST: {
             "content": '""',
             "position": "fixed",
-            "inset": "0",
+            "top": "38vh",
+            "bottom": "0",
+            "left": "0",
+            "right": "0",
             "pointerEvents": "none",
             "zIndex": "-1",
             "backgroundImage": url(akre_svg("dark")),
             "backgroundRepeat": "no-repeat",
             "backgroundPosition": "center bottom",
             "backgroundSize": "cover",
-            "opacity": "0.75",
+            "opacity": "0.4",
         },
-        f"html.light {AKRE_HOST}": {"backgroundImage": url(akre_svg("light")), "opacity": "0.5"},
+        f"html.light {AKRE_HOST}": {"backgroundImage": url(akre_svg("light")), "opacity": "0.3"},
         # The sun in the corner, turning slowly.
         "#root::before": {
             **layer,
