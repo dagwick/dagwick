@@ -1,5 +1,7 @@
 """Newroz for the whole Airflow UI, drawn with CSS only (used by the Newroz theme).
 
+Behind the page stands the mountain above Akre on Newroz night: lines of torchbearers
+climb its slopes in zigzags to a great fire on the summit, above the town lights.
 Dawn breaks behind three ranges of mountains along the bottom of the window, drawn
 as fine ridgelines so the page shows through them. Bonfires burn on four peaks:
 their flames flicker, their light breathes on the hillsides and sparks rise from
@@ -274,6 +276,91 @@ def flowers_svg(seed: int) -> str:
     )
 
 
+# Akre: the mountain above the town on Newroz night, with lines of people carrying
+# torches up its slopes in zigzags to a great fire on the summit.
+AKRE_W, AKRE_H = 1600, 760
+SUMMIT = (1010, 190)
+# Each trail of torchbearers, from the foot of the mountain to the summit.
+TRAILS = (
+    ((470, 760), (720, 660), (560, 590), (830, 500), (690, 420), (900, 340), (820, 270), SUMMIT),
+    ((1420, 760), (1190, 650), (1330, 560), (1100, 470), (1210, 390), (1050, 300), SUMMIT),
+    ((900, 760), (1010, 690), (940, 620)),  # the newest climbers, still near the town
+)
+AKRE = {
+    # mountain, its far neighbour, the sky's glow, the rim light, torches, window light
+    "dark": ("#0c1322", "#111b2e", "rgba(251, 146, 60, 0.22)", "#fb923c", "#ffb347", "#fbbf24"),
+    "light": ("#f3e3d3", "#f7ece1", "rgba(251, 146, 60, 0.20)", "#ea580c", "#f97316", "#f59e0b"),
+}
+
+
+def akre_svg(theme: str, moving: bool = True) -> str:
+    """The Akre mountain on Newroz night. With ``moving``, the torches climb (SVG
+    animation, so the browser draws it without repainting Airflow's page)."""
+    mountain, far, glow, rim, torch, window = AKRE[theme]
+    rng = random.Random(SEED + 5)
+    sx, sy = SUMMIT
+    ridge = (
+        f"M0 {AKRE_H} L0 560 C160 520 300 470 420 430 C540 390 640 330 760 300 "
+        f"C860 270 930 220 {sx - 20} {sy + 6} L{sx} {sy} L{sx + 30} {sy + 12} "
+        "C1120 240 1200 300 1300 340 C1420 390 1520 420 1600 450 "
+        f"L{AKRE_W} {AKRE_H}Z"
+    )
+    neighbour = (
+        f"M0 {AKRE_H} L0 470 C200 420 340 360 480 340 C600 320 680 360 740 380 "
+        "L1600 380 L1600 330 C1500 300 1440 250 1380 240 C1320 230 1260 280 1200 300 "
+        f"L1200 {AKRE_H}Z"
+    )
+    trails = []
+    for pts in TRAILS:
+        d = "M" + " L".join(f"{x} {y}" for x, y in pts)
+        march = (
+            "<animate attributeName='stroke-dashoffset' from='0' to='-16' dur='2.6s' "
+            "repeatCount='indefinite'/>"
+            if moving
+            else ""
+        )
+        trails.append(
+            f"<path d='{d}' fill='none' stroke='{torch}' stroke-opacity='.18' "
+            "stroke-width='8' stroke-linejoin='round' filter='url(#blur)'/>"
+            f"<path d='{d}' fill='none' stroke='{torch}' stroke-width='2.6' stroke-opacity='.85' "
+            f"stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='0 16'>{march}</path>"
+        )
+    windows = "".join(
+        f"<rect x='{rng.uniform(80, 1520):.0f}' y='{rng.uniform(690, 750):.0f}' width='3' "
+        f"height='3' fill='{window}' opacity='{rng.uniform(0.45, 0.9):.2f}'/>"
+        for _ in range(44)
+    )
+    stars = (
+        ""
+        if theme == "light"
+        else "".join(
+            f"<circle cx='{rng.uniform(0, AKRE_W):.0f}' cy='{rng.uniform(0, 260):.0f}' "
+            f"r='{rng.uniform(0.6, 1.3):.1f}' fill='#fff' opacity='{rng.uniform(0.25, 0.6):.2f}'/>"
+            for _ in range(26)
+        )
+    )
+    return (
+        f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {AKRE_W} {AKRE_H}' "
+        "preserveAspectRatio='xMidYMax slice'>"
+        "<defs><filter id='blur'><feGaussianBlur stdDeviation='4'/></filter>"
+        f"<radialGradient id='sky' cx='{sx / AKRE_W:.2f}' cy='{sy / AKRE_H:.2f}' r='.75'>"
+        f"<stop offset='0' stop-color='{glow}'/><stop offset='1' stop-color='{glow}' "
+        "stop-opacity='0'/></radialGradient>"
+        "<radialGradient id='fire'><stop offset='0' stop-color='#fde68a'/>"
+        "<stop offset='.35' stop-color='#fb923c' stop-opacity='.8'/>"
+        "<stop offset='1' stop-color='#f97316' stop-opacity='0'/></radialGradient></defs>"
+        f"<rect width='{AKRE_W}' height='{AKRE_H}' fill='url(#sky)'/>{stars}"
+        f"<path d='{neighbour}' fill='{far}'/>"
+        f"<path d='{ridge}' fill='{mountain}' stroke='{rim}' stroke-opacity='.35' "
+        "stroke-width='2'/>"
+        f"{''.join(trails)}"
+        f"<circle cx='{sx}' cy='{sy}' r='60' fill='url(#fire)' opacity='.9'/>"
+        f"<circle cx='{sx}' cy='{sy}' r='16' fill='url(#fire)'/>"
+        f"{windows}</svg>"
+    )
+
+
+AKRE_HOST = "body::before"
 FLOWERS_LEFT = '[data-testid="main-content"]::before'
 FLOWERS_RIGHT = '[data-testid="main-content"]::after'
 MOVING = (
@@ -326,15 +413,21 @@ def global_css() -> dict[str, Any]:
             "to": {"transform": f"translate3d(0, -{SPARK_H}px, 0)"},
         },
         # A warm dawn behind the hills, and spring green at the foot of the page.
-        "body::before": {
-            **layer,
-            "left": "0",
-            "right": "0",
-            "bottom": "0",
-            "height": "180px",
-            "backgroundImage": "radial-gradient(ellipse 70% 100% at 50% 100%, "
-            "rgba(251, 146, 60, 0.12), transparent 70%)",
+        # Akre on Newroz night, behind the page: it shows between Airflow's cards and
+        # panels, never over them.
+        AKRE_HOST: {
+            "content": '""',
+            "position": "fixed",
+            "inset": "0",
+            "pointerEvents": "none",
+            "zIndex": "-1",
+            "backgroundImage": url(akre_svg("dark")),
+            "backgroundRepeat": "no-repeat",
+            "backgroundPosition": "center bottom",
+            "backgroundSize": "cover",
+            "opacity": "0.75",
         },
+        f"html.light {AKRE_HOST}": {"backgroundImage": url(akre_svg("light")), "opacity": "0.5"},
         # The sun in the corner, turning slowly.
         "#root::before": {
             **layer,
@@ -394,5 +487,9 @@ def global_css() -> dict[str, Any]:
         # Keep Airflow's sidebar (and its user menu) above the decorations. Airflow's own
         # style for the sidebar outranks theme styles, hence !important.
         '[data-testid="nav-sidebar"]': {"zIndex": f"{SIDEBAR} !important"},
-        "@media (prefers-reduced-motion: reduce)": {host: {"animation": "none"} for host in MOVING},
+        "@media (prefers-reduced-motion: reduce)": {
+            **{host: {"animation": "none"} for host in MOVING},
+            AKRE_HOST: {"backgroundImage": url(akre_svg("dark", moving=False))},
+            f"html.light {AKRE_HOST}": {"backgroundImage": url(akre_svg("light", moving=False))},
+        },
     }

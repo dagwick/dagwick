@@ -220,8 +220,9 @@ THEMES: tuple[Theme, ...] = (
     Theme(
         id="newroz",
         name="Newroz",
-        description="The Kurdish sun rises over Airflow, bonfires burn on the mountains "
-        "along the bottom with sparks rising, and nergiz and red tulips sway in the corners.",
+        description="Newroz night in Akre: torchbearers climb the mountain behind Airflow "
+        "to the fire on its summit, bonfires burn along the bottom with sparks rising, "
+        "nergiz and red tulips sway in the corners, and the Kurdish sun turns slowly.",
         start=(3, 19),
         end=(3, 23),
         css=newroz.global_css,
