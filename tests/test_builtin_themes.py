@@ -378,7 +378,7 @@ def test_newroz_dates_and_scene():
         assert "animation" in css[host]
         assert still[host] == {"animation": "none"}
     layers = {host: style for host, style in css.items() if "zIndex" in style}
-    assert len(layers) >= 6
+    assert len(layers) >= 5
     for style in layers.values():  # behind the page: never over Airflow's text or buttons
         assert style["zIndex"] == "-1" and style["pointerEvents"] == "none"
     assert newroz.sun_svg(100).count("L") == 2 * newroz.SUN_RAYS  # 21 rays

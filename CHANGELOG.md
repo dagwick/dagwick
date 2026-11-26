@@ -19,13 +19,12 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - **A Newroz theme for all of Airflow** (19–23 March), drawn behind Airflow's
-  page so it never covers text or buttons. The Kurdish sun with
-  its 21 rays turns slowly in the corner, bonfires flicker on mountains drawn
-  as fine lines along the bottom (so the page shows through), sparks rise from
-  them, and nergiz and red tulips sway in the bottom corners. Like Christmas and Halloween it
-  shows by itself on its dates, can be applied any day from the **Themes** tab,
-  and stands still for
-  viewers who prefer reduced motion.
+  page so it never covers text or buttons. Bonfires flicker on mountains drawn
+  as fine lines along the bottom, sparks rise from them and fade, nergiz and
+  red tulips sway in the bottom corners, and the Kurdish sun with its 21 rays
+  turns slowly in the corner. Like Christmas and Halloween it shows by itself
+  on its dates, can be applied any day from the **Themes** tab, and stands
+  still for viewers who prefer reduced motion.
 - **New Year no longer looks like Dagwick's birthday.** On its dates the
   banner's Wick wears a black top hat with a gold band instead of a party hat,
   a gold clock at midnight stands next to the candle, the sign is 🥂, and gold
