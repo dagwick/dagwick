@@ -9,6 +9,7 @@ DEFAULT_OWNERS = {"", "airflow"}
 
 @check(
     id="owner",
+    code="DW301",
     why=(
         "When a DAG breaks, the first question is who to call. The default owner, "
         "'airflow', means nobody. The owner is shown in Airflow's DAG list and on "
@@ -30,6 +31,7 @@ def owner(dag: Any) -> Finding:
 
 @check(
     id="tags",
+    code="DW303",
     why=(
         "Tags are how people filter hundreds of DAGs in Airflow's DAG list and on "
         "Dagwick's fleet page. A DAG without tags is hard to find, and is left out of "
@@ -51,6 +53,7 @@ def tags(dag: Any) -> Finding:
 
 @check(
     id="docs",
+    code="DW302",
     why=(
         "doc_md is shown on the DAG's page in Airflow. Whoever is on call needs to know "
         "what the DAG loads, from where, what depends on it and who owns it, without "

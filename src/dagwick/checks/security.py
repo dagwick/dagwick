@@ -9,6 +9,7 @@ from dagwick.core import Category, Context, Finding, Status, check
 
 @check(
     id="hardcoded_secrets",
+    code="DW701",
     why=(
         "A credential in a DAG file is in the repository's history for good, in every "
         "clone, and in Airflow's database, where the DAG's code is shown to everyone who "

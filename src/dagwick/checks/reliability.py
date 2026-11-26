@@ -10,6 +10,7 @@ from dagwick.core import Category, Context, Finding, Status, check
 
 @check(
     id="retries",
+    code="DW101",
     why=(
         "Most task failures are transient: a network blip, a database restart, a rate "
         "limit. Without retries, one of them fails the whole run and someone has to clear"
@@ -48,6 +49,7 @@ def _waits_for_past(task: Any) -> bool:
 
 @check(
     id="depends_on_past",
+    code="DW105",
     why=(
         "depends_on_past=True makes a task wait until the same task succeeded in the "
         "previous run. After one failure, later runs stop: their tasks never start, the runs "
@@ -117,6 +119,7 @@ def depends_on_past(dag: Any, context: Context) -> Finding:
 
 @check(
     id="execution_timeout",
+    code="DW102",
     why=(
         "A task that hangs (a stuck query, a connection that never times out) holds its "
         "worker slot forever. Other tasks queue behind it, and because it never fails, no"
@@ -154,6 +157,7 @@ def _duration(seconds: float) -> str:
 
 @check(
     id="deadline_alerts",
+    code="DW106",
     why=(
         "A run that is late but hasn't failed sets off nothing: on_failure_callback waits for "
         "a failure, and dagrun_timeout for the timeout, hours away for a long DAG. Airflow 3 "
@@ -225,6 +229,7 @@ def deadline_alerts(dag: Any, context: Context) -> Finding:
 
 @check(
     id="dagrun_timeout",
+    code="DW103",
     why=(
         "A stuck run still counts as active. With max_active_runs=1, the next scheduled "
         "run waits behind it forever and the data silently stops updating. dagrun_timeout"
@@ -252,6 +257,7 @@ def _has_start_date(dag: Any) -> bool:
 
 @check(
     id="dynamic_start_date",
+    code="DW104",
     why=(
         "A start_date built from the current time, such as datetime.now(), pendulum.today()"
         " or days_ago(1), is a new value every time Airflow parses the file, every few "

@@ -8,6 +8,7 @@ from dagwick.core import Category, Finding, Status, check
 
 @check(
     id="schedule",
+    code="DW401",
     why=(
         "A DAG without a schedule only runs when something triggers it: a person, another"
         " DAG or the API. That is right for some DAGs, but often the schedule was simply "
@@ -37,6 +38,7 @@ def schedule(dag: Any) -> Finding:
 
 @check(
     id="catchup",
+    code="DW402",
     why=(
         "With catchup=True, unpausing the DAG, or deploying it with an old start_date, "
         "starts a run for every missed interval, possibly hundreds at once. They can "
@@ -65,6 +67,7 @@ def catchup(dag: Any) -> Finding:
 
 @check(
     id="auto_pause",
+    code="DW403",
     why=(
         "A broken DAG on a frequent schedule fails on every run, all night: alerts pile "
         "up and worker slots are wasted. max_consecutive_failed_dag_runs pauses it after "
@@ -96,6 +99,7 @@ def auto_pause(dag: Any) -> Finding:
 
 @check(
     id="max_active_runs",
+    code="DW404",
     why=(
         "Without a limit, a backfill or catchup can start many runs at once, all reading "
         "the same sources and writing the same tables. For most ETL, runs of the same DAG"
