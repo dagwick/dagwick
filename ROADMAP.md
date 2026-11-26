@@ -8,7 +8,7 @@ in [issues](https://github.com/dagwick/dagwick/issues).
 ### Trust the grades (late 2026 – early 2027)
 
 - [ ] **Validate on real Airflow deployments.** Review grades with DAG owners,
-      fix false alarms and tune the weights (the [validation kit](docs/validation.md)).
+      fix false alarms and tune the weights.
 - [ ] **Act on disputes.** Every
       [Dispute a check](https://github.com/dagwick/dagwick/issues/new?template=dispute.yml)
       report gets an answer, and the rules or weights change when it is right.
@@ -60,8 +60,7 @@ and will not change in the next year:
 - [x] Check packs through the `dagwick.checks` entry point (0.3.0)
 - [x] Fleet CSV download (0.3.0) and fleet filters by owner and tag
 - [x] Seasonal moods, on by default (0.3.0)
-- [x] Airflow-wide seasonal themes: config-only files, and built in for
-      Christmas and Halloween (0.3.0)
+- [x] Airflow-wide seasonal themes for Christmas and Halloween (0.3.0)
 - [x] Signed releases to PyPI with Trusted Publishing, Dependabot, CodeQL,
       fuzzing and an OpenSSF Scorecard badge
 - [x] OpenSSF Best Practices passing badge

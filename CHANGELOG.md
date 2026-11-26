@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- **The config-only theme files** (`themes/`). The Christmas and Halloween
+  themes are built into Dagwick (the **Themes** tab), so the separate
+  `[api] theme` JSON files were a second copy to keep up to date.
+- **The validation kit** (`scripts/fleet_review.py`, `docs/validation.md`),
+  written for the real-deployment review in #33, which is done. For a
+  one-off report use **Download CSV** on the fleet page, or the fleet API in
+  [docs/dashboards.md](docs/dashboards.md).
+
 ### Added
 
 - **New Year no longer looks like Dagwick's birthday.** On its dates the

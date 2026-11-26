@@ -5,7 +5,7 @@ small animated scene. Moods are **decoration only**: scores, grades and text nev
 change, and everything goes back to normal when the holiday ends.
 
 Moods dress up Dagwick's own pages. To decorate all of Airflow for a holiday,
-see the [config-only themes](https://github.com/dagwick/dagwick/blob/main/themes/README.md).
+open the **Themes** tab on Dagwick's page.
 
 ![All seasonal moods](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/screenshots/moods.png)
 
