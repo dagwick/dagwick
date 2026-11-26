@@ -297,8 +297,8 @@ function NewrozScene() {
     >
       <defs>
         <linearGradient id="dagwick-nz-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#10261d" />
-          <stop offset="1" stopColor="#1c4a35" />
+          <stop offset="0" stopColor="#0f1f2a" />
+          <stop offset="1" stopColor="#3a2a1c" />
         </linearGradient>
         <radialGradient id="dagwick-nz-glow">
           <stop offset="0" stopColor="#fb923c" stopOpacity=".6" />
@@ -309,8 +309,9 @@ function NewrozScene() {
       <circle cx="182" cy="30" r="24" fill="#fde68a" opacity=".12" />
       <path d={rays} fill="#fbbf24" />
       <circle cx="182" cy="30" r="8" fill="#fbbf24" />
-      <path d="M0 84 L30 62 L56 78 L96 44 L130 74 L160 52 L196 80 L220 66 V110 H0Z" fill="#1f4d3c" />
-      <path d="M0 98 L36 80 L66 66 L104 92 L150 72 L190 94 L220 86 V110 H0Z" fill="#123628" />
+      <path d="M0 70 C24 60 40 52 64 56 S104 72 128 60 S176 44 220 58 V110 H0Z" fill="#3c6e74" opacity=".7" />
+      <path d="M0 84 C20 76 40 70 66 66 S112 80 150 72 S200 82 220 78 V110 H0Z" fill="#21573f" />
+      <path d="M0 98 C30 92 50 86 80 90 S140 100 170 94 S210 92 220 96 V110 H0Z" fill="#123a24" />
       {fires.map(([x, y]) => (
         <g key={x} transform={`translate(${x} ${y})`}>
           <circle cy="-6" r="16" fill="url(#dagwick-nz-glow)" />
