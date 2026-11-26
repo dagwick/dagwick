@@ -275,10 +275,10 @@ def test_decorated_themes_never_share_a_day():
 
 
 def test_banner_only_themes_leave_airflow_untouched():
-    info = themes.BY_ID["newroz"].info(date(2026, 3, 20))
+    info = themes.BY_ID["language-day"].info(date(2026, 5, 15))
     assert info["decorated"] is False and info["active"] is True
-    assert themes.BY_ID["christmas"].info(date(2026, 3, 20))["decorated"] is True
-    res = _airflow()(date(2026, 3, 20)).get("/ui/config")  # Newroz: banner only
+    assert themes.BY_ID["christmas"].info(date(2026, 5, 15))["decorated"] is True
+    res = _airflow()(date(2026, 5, 15)).get("/ui/config")  # Language Day: banner only
     assert res.json()["theme"] is None
 
 
@@ -362,3 +362,26 @@ def test_middleware_only_touches_airflows_own_ui_config_route(path, root_path, m
     from dagwick.themes import _is_ui_config
 
     assert _is_ui_config({"path": path, "root_path": root_path}) is matches
+
+
+def test_newroz_dates_and_scene():
+    from dagwick import newroz
+
+    theme = themes.BY_ID["newroz"]
+    assert theme.ready
+    assert theme.active_on(date(2027, 3, 19)) and theme.active_on(date(2027, 3, 23))
+    assert not theme.active_on(date(2027, 3, 24))
+    assert pick_theme({}, date(2027, 3, 21)) is theme
+    css = newroz.global_css()
+    still = css["@media (prefers-reduced-motion: reduce)"]
+    for host in newroz.MOVING:
+        assert "animation" in css[host]
+        assert still[host] == {"animation": "none"}
+    layers = {host: style for host, style in css.items() if "zIndex" in style}
+    assert len(layers) >= 5
+    for style in layers.values():  # behind the page: never over Airflow's text or buttons
+        assert style["zIndex"] == "-1" and style["pointerEvents"] == "none"
+    assert newroz.sun_svg(100).count("L") == 2 * newroz.SUN_RAYS  # 21 rays
+    assert len(json.dumps(css)) < 100_000
+    sheets = themes.theme_sheets("newroz")
+    assert "#root::after" in sheets["hide"] and "html::before" in sheets["reset"]

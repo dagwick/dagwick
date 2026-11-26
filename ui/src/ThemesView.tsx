@@ -192,6 +192,7 @@ function Themes({ themes }: { themes: ThemeInfo[] }) {
 function Scene({ id }: { id: string }) {
   if (id === "halloween") return <HalloweenScene />;
   if (id === "christmas") return <SnowScene />;
+  if (id === "newroz") return <NewrozScene />;
   return <BannerScene id={id} />;
 }
 
@@ -271,6 +272,80 @@ function HalloweenScene() {
       ))}
       <ellipse cx="60" cy="104" rx="90" ry="14" fill="#7c3aed" opacity=".35" />
       <ellipse cx="170" cy="106" rx="80" ry="12" fill="#4c1d95" opacity=".45" />
+    </svg>
+  );
+}
+
+/** Newroz: the Kurdish sun over mountains with bonfires on their peaks. */
+function NewrozScene() {
+  const rays = Array.from({ length: 21 }, (_, i) => {
+    const a = (2 * Math.PI * i) / 21 - Math.PI / 2;
+    const h = Math.PI / 42;
+    const p = (r: number, b: number) => `${(182 + r * Math.cos(b)).toFixed(1)} ${(30 + r * Math.sin(b)).toFixed(1)}`;
+    return `M${p(10, a - h)} L${p(19, a)} L${p(10, a + h)}Z`;
+  }).join(" ");
+  const fires: [number, number][] = [
+    [66, 66],
+    [150, 72],
+  ];
+  return (
+    <svg
+      className="dagwick-theme-scene"
+      viewBox="0 0 220 110"
+      role="img"
+      aria-label="The Kurdish sun over mountains with bonfires"
+    >
+      <defs>
+        <linearGradient id="dagwick-nz-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#0f1f2a" />
+          <stop offset="1" stopColor="#3a2a1c" />
+        </linearGradient>
+        <radialGradient id="dagwick-nz-glow">
+          <stop offset="0" stopColor="#fb923c" stopOpacity=".6" />
+          <stop offset="1" stopColor="#fb923c" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="220" height="110" fill="url(#dagwick-nz-sky)" />
+      <circle cx="182" cy="30" r="24" fill="#fde68a" opacity=".12" />
+      <path d={rays} fill="#fbbf24" />
+      <circle cx="182" cy="30" r="8" fill="#fbbf24" />
+      <g fill="none" strokeWidth="1.2" strokeLinecap="round">
+        <path d="M0 70 C24 60 40 52 64 56 S104 72 128 60 S176 44 220 58" stroke="#a7d3c2" opacity=".35" />
+        <path d="M0 84 C20 76 40 70 66 66 S112 80 150 72 S200 82 220 78" stroke="#a7d3c2" opacity=".55" />
+        <path d="M0 98 C30 92 50 86 80 90 S140 100 170 94 S210 92 220 96" stroke="#fbbf24" opacity=".6" />
+      </g>
+      {[
+        [18, 92, "n"],
+        [28, 96, "t"],
+        [200, 94, "n"],
+      ].map(([x, y, kind]) => (
+        <g key={x} transform={`translate(${x} ${y})`}>
+          <path d={`M0 0 V${110 - Number(y)}`} stroke="#4d7c4f" strokeWidth="1.2" />
+          {kind === "t" ? (
+            <path d="M-3 -1 C-4 -6 -2 -8 0 -9 C2 -8 4 -6 3 -1 C2 1 -2 1 -3 -1Z" fill="#dc2626" />
+          ) : (
+            <>
+              <circle r="3.4" fill="#fffdf5" />
+              <circle r="1.4" fill="#f59e0b" />
+            </>
+          )}
+        </g>
+      ))}
+      {fires.map(([x, y]) => (
+        <g key={x} transform={`translate(${x} ${y})`}>
+          <circle cy="-6" r="16" fill="url(#dagwick-nz-glow)" />
+          <path d="M0 0 C-5 -3 -3 -9 0 -15 C3 -9 5 -3 0 0Z" fill="#f97316" />
+          <path d="M0 0 C-3 -2 -2 -6 0 -10 C2 -6 3 -2 0 0Z" fill="#facc15" />
+        </g>
+      ))}
+      {[
+        [80, 40],
+        [140, 30],
+        [60, 24],
+        [120, 52],
+      ].map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="1.2" fill="#fdba74" opacity=".8" />
+      ))}
     </svg>
   );
 }

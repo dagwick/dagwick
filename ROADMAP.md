@@ -60,7 +60,7 @@ and will not change in the next year:
 - [x] Check packs through the `dagwick.checks` entry point (0.3.0)
 - [x] Fleet CSV download (0.3.0) and fleet filters by owner and tag
 - [x] Seasonal moods, on by default (0.3.0)
-- [x] Airflow-wide seasonal themes for Christmas and Halloween (0.3.0)
+- [x] Airflow-wide seasonal themes for Christmas and Halloween (0.3.0), and Newroz
 - [x] Signed releases to PyPI with Trusted Publishing, Dependabot, CodeQL,
       fuzzing and an OpenSSF Scorecard badge
 - [x] OpenSSF Best Practices passing badge
