@@ -275,22 +275,24 @@ function HalloweenScene() {
   );
 }
 
-/** The New Year theme's picture: fireworks over the night and falling confetti. */
+/** The New Year theme's picture: soft fireworks and stars in a midnight sky. */
 function NewYearScene() {
   const bursts: [number, number, number, string, string][] = [
-    [60, 38, 26, "#fbbf24", "#f472b6"],
-    [150, 30, 20, "#22d3ee", "#a78bfa"],
-    [110, 62, 14, "#4ade80", "#fbbf24"],
+    [62, 40, 26, "#fcd34d", "#a5b4fc"],
+    [158, 34, 20, "#fbbf24", "#f9a8d4"],
+    [112, 66, 14, "#fcd34d", "#67e8f9"],
   ];
-  const confetti: [number, number, number, string][] = [
-    [24, 84, 20, "#f472b6"],
-    [86, 96, -30, "#fbbf24"],
-    [132, 88, 45, "#22d3ee"],
-    [178, 98, -10, "#a78bfa"],
-    [200, 76, 60, "#4ade80"],
+  const stars: [number, number, number][] = [
+    [22, 18, 1.1],
+    [96, 12, 0.9],
+    [196, 22, 1.2],
+    [34, 70, 0.8],
+    [180, 64, 1],
+    [140, 90, 0.8],
+    [70, 94, 0.9],
   ];
   return (
-    <svg className="dagwick-theme-scene" viewBox="0 0 220 110" role="img" aria-label="Fireworks and confetti">
+    <svg className="dagwick-theme-scene" viewBox="0 0 220 110" role="img" aria-label="Soft gold fireworks in a midnight sky">
       <rect width="220" height="110" fill="#17133a" />
       <rect y="70" width="220" height="40" fill="#f59e0b" opacity=".12" />
       {bursts.map(([x, y, r, outer, inner], b) => (
@@ -309,8 +311,8 @@ function NewYearScene() {
           })}
         </g>
       ))}
-      {confetti.map(([x, y, turn, color], i) => (
-        <rect key={i} x={x} y={y} width="3.5" height="8" rx="1" fill={color} transform={`rotate(${turn} ${x} ${y})`} />
+      {stars.map(([x, y, r], i) => (
+        <circle key={i} cx={x} cy={y} r={r} fill="#fde68a" opacity=".7" />
       ))}
     </svg>
   );

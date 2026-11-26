@@ -1,11 +1,11 @@
 """New Year for the whole Airflow UI, drawn with CSS only (used by the New Year theme).
 
-Fireworks burst in the upper part of the window, each on its own rhythm: it blooms,
-droops a little as if pulled down, and fades. Confetti and gold glitter drift down in
-two layers at different speeds, some confetti has settled on top of the cards, and a
-warm glow rises from the bottom of the window. Everything moves with CSS transforms and
-opacity, which the graphics card does without repainting the page. Viewers who prefer
-reduced motion get a still scene. Airflow's sidebar stays above the decorations.
+A calm midnight sky behind Airflow: a few soft fireworks bloom and fade slowly, each
+on its own rhythm, gold stars twinkle, and a warm glow rises from the bottom of the
+window. Everything is drawn *behind* Airflow's page, so it only shows in the space
+around the cards and never covers text, buttons or menus. It moves with CSS
+transforms and opacity, which the graphics card does without repainting the page.
+Viewers who prefer reduced motion get a still scene.
 """
 
 from __future__ import annotations
@@ -15,14 +15,14 @@ import random
 from dataclasses import dataclass
 from typing import Any
 
-from dagwick.halloween import SIDEBAR, TOP
-from dagwick.snow import CAP_H, CAPPED, EDGE, INSIDE, VARIANTS, url
+from dagwick.snow import url
 
 SEED = 1231
+BEHIND = "-1"  # below Airflow's page content, above the window's background
 
-# Bright on Airflow's dark page, and still visible on the light one.
-COLORS = ("#fbbf24", "#f472b6", "#22d3ee", "#a78bfa", "#4ade80", "#fb7185", "#facc15")
-GOLD = ("#fde68a", "#fbbf24", "#f59e0b")
+# Soft, warm colours: gold first, a few cool accents.
+COLORS = ("#fcd34d", "#fbbf24", "#f9a8d4", "#a5b4fc", "#67e8f9")
+STAR = ("#fde68a", "#fef3c7", "#fcd34d")
 
 
 def _move(x: float, y: float, scale: float = 1.0) -> str:
@@ -31,16 +31,9 @@ def _move(x: float, y: float, scale: float = 1.0) -> str:
 
 # ---- fireworks ----
 
-# Elements whose free ::before/::after carry one firework each; they exist on every
-# Airflow page (the same ones Halloween uses for its bats).
-BURST_HOSTS = (
-    "html::after",
-    "body::after",
-    '[data-testid="nav-sidebar"]::before',
-    '[data-testid="nav-sidebar"]::after',
-    '[data-testid="nav-home-link"]::before',
-    '[data-testid="nav-dags-link"]::before',
-)
+# Page-level pseudo-elements, free on every Airflow page. Not the sidebar's: anything
+# drawn there would sit in the sidebar's layer, above the page.
+BURST_HOSTS = ("html::after", "body::after", "#root::before", "#root::after")
 
 
 @dataclass(frozen=True)
@@ -48,25 +41,25 @@ class Burst:
     size: int  # px
     left: float  # vw, where the centre is
     top: float  # vh
-    outer: str  # colour of the long rays
-    inner: str  # colour of the short rays
+    outer: str
+    inner: str
     rays: int
     seconds: float
     delay: float  # negative: the cycle has already started when the page opens
 
 
 def burst_svg(burst: Burst) -> str:
-    """One firework: rays of sparks fading towards the centre, and a soft glow."""
+    """One firework: thin rays of sparks fading towards the centre, and a soft glow."""
     r = burst.size / 2
 
     def ring(count: int, inner: float, outer: float, color: str, turn: float) -> str:
         sparks = []
         for i in range(count):
             a = math.tau * i / count + turn
-            for step, (k, size, op) in enumerate(((0, 1.0, 1), (1, 0.75, 0.7), (2, 0.5, 0.45))):
-                at = outer - (outer - inner) * k / 3
+            for k, size, op in ((0, 1.0, 0.95), (1, 0.7, 0.6), (2, 0.5, 0.35), (3, 0.4, 0.2)):
+                at = outer - (outer - inner) * k / 4
                 x, y = math.cos(a) * at * r, math.sin(a) * at * r
-                dot = max(0.8, r * 0.022 * size) * (1.2 if step == 0 else 1)
+                dot = max(0.7, r * 0.016 * size)
                 sparks.append(
                     f"<circle cx='{x:.1f}' cy='{y:.1f}' r='{dot:.1f}' fill='{color}' "
                     f"opacity='{op}'/>"
@@ -77,46 +70,47 @@ def burst_svg(burst: Burst) -> str:
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{burst.size}' height='{burst.size}' "
         f"viewBox='{-r:.0f} {-r:.0f} {burst.size} {burst.size}'>"
         "<defs><radialGradient id='g'>"
-        f"<stop offset='0' stop-color='{burst.inner}' stop-opacity='.55'/>"
-        f"<stop offset='1' stop-color='{burst.inner}' stop-opacity='0'/>"
+        f"<stop offset='0' stop-color='{burst.outer}' stop-opacity='.35'/>"
+        f"<stop offset='1' stop-color='{burst.outer}' stop-opacity='0'/>"
         "</radialGradient></defs>"
-        f"<circle r='{r * 0.32:.0f}' fill='url(#g)'/>"
-        f"{ring(burst.rays, 0.5, 0.95, burst.outer, 0)}"
-        f"{ring(burst.rays // 2, 0.22, 0.55, burst.inner, math.pi / burst.rays)}"
+        f"<circle r='{r * 0.45:.0f}' fill='url(#g)'/>"
+        f"{ring(burst.rays, 0.45, 0.95, burst.outer, 0)}"
+        f"{ring(burst.rays // 2, 0.2, 0.5, burst.inner, math.pi / burst.rays)}"
         "</svg>"
     )
 
 
 def bursts(rng: random.Random) -> list[Burst]:
-    """Six fireworks spread over the upper part of the window, clear of the sidebar."""
-    lefts = [18, 32, 47, 61, 75, 88]
-    rng.shuffle(lefts)
+    """Four fireworks, spread over the window and clear of the sidebar."""
+    spots = [(20, 16), (44, 30), (67, 12), (86, 34)]
+    rng.shuffle(spots)
     out = []
-    for i, left in enumerate(lefts):
-        outer, inner = rng.sample(COLORS, 2)
+    for i, (left, top) in enumerate(spots):
+        outer = COLORS[i % 2]  # gold, every one
+        inner = rng.choice(COLORS[2:])
         out.append(
             Burst(
-                size=rng.choice((150, 180, 210, 240)),
-                left=left + rng.uniform(-4, 4),
-                top=rng.uniform(10, 38),
+                size=rng.choice((220, 260, 300)),
+                left=left + rng.uniform(-3, 3),
+                top=top + rng.uniform(-4, 4),
                 outer=outer,
                 inner=inner,
-                rays=rng.choice((14, 16, 18)),
-                seconds=round(rng.uniform(5.5, 8.5), 1),
-                delay=-round(i * 1.3 + rng.uniform(0, 1), 1),
+                rays=rng.choice((18, 20, 22)),
+                seconds=round(rng.uniform(9, 12), 1),
+                delay=-round(i * 2.6 + rng.uniform(0, 1), 1),
             )
         )
     return out
 
 
 def fireworks(rng: random.Random) -> dict[str, Any]:
-    """Each firework blooms, droops and fades, then waits for its next turn."""
+    """Each firework blooms slowly, drifts down a little and fades, then rests."""
     css: dict[str, Any] = {
         ", ".join(BURST_HOSTS): {
             "content": '""',
             "position": "fixed",
             "pointerEvents": "none",
-            "zIndex": TOP,
+            "zIndex": BEHIND,
             "opacity": "0",
             "backgroundRepeat": "no-repeat",
             "backgroundSize": "100% 100%",
@@ -133,196 +127,83 @@ def fireworks(rng: random.Random) -> dict[str, Any]:
             "backgroundImage": url(burst_svg(b)),
             "animation": f"{name} {b.seconds}s ease-out {b.delay}s infinite",
         }
-        droop = b.size * 0.08
+        droop = b.size * 0.05
         css[f"@keyframes {name}"] = {
-            "0%": {"opacity": "0", "transform": _move(0, 0, 0.1)},
-            "5%": {"opacity": "1", "transform": _move(0, 0, 0.4)},
-            "28%": {"opacity": "0.95", "transform": _move(0, droop / 3, 1)},
-            "50%": {"opacity": "0", "transform": _move(0, droop, 1.06)},
-            "100%": {"opacity": "0", "transform": _move(0, droop, 1.06)},
+            "0%": {"opacity": "0", "transform": _move(0, 0, 0.2)},
+            "6%": {"opacity": "0.9", "transform": _move(0, 0, 0.55)},
+            "30%": {"opacity": "0.8", "transform": _move(0, droop / 2, 1)},
+            "55%": {"opacity": "0", "transform": _move(0, droop, 1.04)},
+            "100%": {"opacity": "0", "transform": _move(0, droop, 1.04)},
         }
     return css
 
 
-# ---- confetti ----
+# ---- stars and glow ----
 
 
-@dataclass(frozen=True)
-class Layer:
-    host: str
-    width: int
-    height: int
-    count: int
-    scale: tuple[float, float]
-    seconds: float
-
-
-LAYERS = (
-    Layer("html::before", 1031, 613, 26, (0.6, 0.9), 30),
-    Layer("#root::after", 1213, 1009, 18, (1.0, 1.4), 21),
-)
-SWAY = 22
-
-
-def piece(rng: random.Random, scale: float) -> str:
-    """One bit of confetti: a paper strip, a dot, a curl of streamer or gold glitter."""
-    color = rng.choice(COLORS)
-    kind = rng.random()
-    if kind < 0.45:
-        w, h = 4 * scale, 9 * scale
-        return (
-            f"<rect x='{-w / 2:.1f}' y='{-h / 2:.1f}' width='{w:.1f}' height='{h:.1f}' "
-            f"rx='1' fill='{color}'/>"
-        )
-    if kind < 0.65:
-        return f"<circle r='{2.6 * scale:.1f}' fill='{color}'/>"
-    if kind < 0.8:
-        s = 6 * scale
-        return (
-            f"<path d='M{-s:.1f} 0 q{s / 2:.1f} {-s:.1f} {s:.1f} 0 t{s:.1f} 0' fill='none' "
-            f"stroke='{color}' stroke-width='{1.6 * scale:.1f}' stroke-linecap='round'/>"
-        )
-    gold = rng.choice(GOLD)
-    s = 3.2 * scale
-    star = (  # a four-pointed glint
-        f"M0 {-s:.1f} L{s / 3:.1f} 0 L0 {s:.1f} L{-s / 3:.1f} 0Z "
-        f"M{-s:.1f} 0 L0 {s / 3:.1f} L{s:.1f} 0 L0 {-s / 3:.1f}Z"
-    )
-    return f"<path d='{star}' fill='{gold}'/>"
-
-
-def confetti_svg(rng: random.Random, layer: Layer) -> str:
-    """One repeat of a layer; a piece near an edge is also drawn on the other side."""
-    w, h = layer.width, layer.height
-    out = [f"<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}'>"]
-    for _ in range(layer.count):
-        x, y = rng.uniform(0, w), rng.uniform(0, h)
-        shape = piece(rng, rng.uniform(*layer.scale))
-        turn, op = rng.uniform(0, 360), rng.uniform(0.55, 0.9)
-        reach = 16
-        for px in [x] + [x + d for d in (-w, w) if abs(x + d - w / 2) < w / 2 + reach]:
-            for py in [y] + [y + d for d in (-h, h) if abs(y + d - h / 2) < h / 2 + reach]:
-                out.append(
-                    f"<g transform='translate({px:.0f} {py:.0f}) rotate({turn:.0f})' "
-                    f"opacity='{op:.2f}'>{shape}</g>"
-                )
+def stars_svg(rng: random.Random, width: int, height: int, count: int) -> str:
+    """Small gold stars and glints scattered over one repeat."""
+    out = [f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}'>"]
+    for _ in range(count):
+        x, y = rng.uniform(0, width), rng.uniform(0, height * 0.7)  # mostly in the sky
+        color, op = rng.choice(STAR), rng.uniform(0.35, 0.8)
+        if rng.random() < 0.3:
+            s = rng.uniform(3, 5)  # a four-pointed glint
+            star = (
+                f"M{x:.0f} {y - s:.1f} L{x + s / 4:.1f} {y:.0f} L{x:.0f} {y + s:.1f} "
+                f"L{x - s / 4:.1f} {y:.0f}Z M{x - s:.1f} {y:.0f} L{x:.0f} {y + s / 4:.1f} "
+                f"L{x + s:.1f} {y:.0f} L{x:.0f} {y - s / 4:.1f}Z"
+            )
+            out.append(f"<path d='{star}' fill='{color}' opacity='{op:.2f}'/>")
+        else:
+            out.append(
+                f"<circle cx='{x:.0f}' cy='{y:.0f}' r='{rng.uniform(0.6, 1.3):.1f}' "
+                f"fill='{color}' opacity='{op:.2f}'/>"
+            )
     out.append("</svg>")
     return "".join(out)
-
-
-def confetti(rng: random.Random) -> dict[str, Any]:
-    """Two layers of confetti falling at different speeds, swaying side to side."""
-    css: dict[str, Any] = {}
-    for i, layer in enumerate(LAYERS):
-        name = f"dagwickConfetti{i}"
-        side = f"-{SWAY * 2}px"
-        css[layer.host] = {
-            "content": '""',
-            "position": "fixed",
-            "top": f"-{layer.height}px",
-            "bottom": "0",
-            "left": side,
-            "right": side,
-            "pointerEvents": "none",
-            "zIndex": TOP,
-            "backgroundImage": url(confetti_svg(rng, layer)),
-            "backgroundSize": f"{layer.width}px {layer.height}px",
-            "willChange": "transform",
-            "animation": f"{name} {layer.seconds}s linear infinite",
-        }
-        h = layer.height
-        css[f"@keyframes {name}"] = {
-            "0%": {"transform": _move(0, 0)},
-            "25%": {"transform": _move(SWAY, h / 4)},
-            "50%": {"transform": _move(0, h / 2)},
-            "75%": {"transform": _move(-SWAY, h * 3 / 4)},
-            "100%": {"transform": _move(0, h)},
-        }
-    return css
-
-
-# ---- confetti settled on the cards ----
-
-
-def settled_svg(seed: int, width: int) -> str:
-    """One repeat of confetti lying along a card's top edge."""
-    rng = random.Random(seed)
-    out = [
-        f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{CAP_H}' "
-        f"viewBox='0 0 {width} {CAP_H}'>"
-    ]
-    for _ in range(rng.randint(5, 8)):
-        x = rng.uniform(8, width - 8)
-        y = EDGE - rng.uniform(1.5, 3.5)  # resting on the edge
-        turn = rng.choice((rng.uniform(-25, 25), rng.uniform(65, 115)))  # mostly lying flat
-        out.append(
-            f"<g transform='translate({x:.0f} {y:.1f}) rotate({turn:.0f})' opacity='.9'>"
-            f"{piece(rng, rng.uniform(0.7, 1.0))}</g>"
-        )
-    out.append("</svg>")
-    return "".join(out)
-
-
-def settled() -> dict[str, Any]:
-    """Confetti on each card's top edge, in five random variants spread over the cards."""
-    css: dict[str, Any] = {'[data-testid="card-list"]': {"paddingTop": f"{EDGE}px"}}
-    for sel in CAPPED:
-        css[sel] = {"position": "relative"}
-        css[f"{sel}::after"] = {
-            "content": '""',
-            "position": "absolute",
-            "top": "-1px" if sel in INSIDE else f"-{EDGE}px",
-            "left": "4px",
-            "right": "4px",
-            "height": f"{CAP_H}px",
-            "backgroundRepeat": "repeat-x",
-            "pointerEvents": "none",
-            "zIndex": "1",
-        }
-    for k in range(VARIANTS):
-        rng = random.Random(4000 + k)
-        width = rng.randint(260, 420)
-        key = ", ".join(f"{pick(k + 1)}::after" for pick in CAPPED.values())
-        css[key] = {
-            "backgroundImage": url(settled_svg(5000 + k, width)),
-            "backgroundSize": f"{width}px {CAP_H}px",
-            "backgroundPosition": f"{rng.randint(0, width)}px 0",
-        }
-    return css
 
 
 def global_css() -> dict[str, Any]:
     """New Year as Airflow theme ``globalCss`` (selector -> style)."""
     rng = random.Random(SEED)
-    moving = [*BURST_HOSTS, *(layer.host for layer in LAYERS)]
+    star_w, star_h = 1180, 760
     return {
-        **settled(),
-        **confetti(rng),
         **fireworks(rng),
-        # A warm glow rising from the bottom, and a faint night sky at the top.
+        # Gold stars that slowly brighten and dim.
+        "html::before": {
+            "content": '""',
+            "position": "fixed",
+            "inset": "0",
+            "pointerEvents": "none",
+            "zIndex": BEHIND,
+            "backgroundImage": url(stars_svg(rng, star_w, star_h, 46)),
+            "backgroundSize": f"{star_w}px {star_h}px",
+            "willChange": "opacity",
+            "animation": "dagwickStars 7s ease-in-out infinite alternate",
+        },
+        "@keyframes dagwickStars": {"from": {"opacity": "0.55"}, "to": {"opacity": "1"}},
+        # A warm glow rising from the bottom, and a deeper night at the top.
         "body::before": {
             "content": '""',
             "position": "fixed",
             "inset": "0",
             "pointerEvents": "none",
-            "zIndex": TOP,
+            "zIndex": BEHIND,
             "backgroundImage": (
-                "linear-gradient(to top, rgba(251, 191, 36, 0.16), transparent 140px), "
-                "radial-gradient(ellipse at top, rgba(76, 29, 149, 0.2), transparent 55%)"
+                "linear-gradient(to top, rgba(251, 191, 36, 0.14), transparent 160px), "
+                "radial-gradient(ellipse at top, rgba(49, 46, 129, 0.35), transparent 60%)"
             ),
         },
         "html.light body::before": {
             "backgroundImage": (
-                "linear-gradient(to top, rgba(245, 158, 11, 0.12), transparent 140px), "
-                "radial-gradient(ellipse at top, rgba(124, 58, 237, 0.08), transparent 55%)"
+                "linear-gradient(to top, rgba(245, 158, 11, 0.12), transparent 160px), "
+                "radial-gradient(ellipse at top, rgba(99, 102, 241, 0.08), transparent 60%)"
             ),
         },
-        # Keep Airflow's sidebar (and its user menu) above the decorations. Airflow's own
-        # style for the sidebar outranks theme styles, hence !important.
-        '[data-testid="nav-sidebar"]': {"zIndex": f"{SIDEBAR} !important"},
-        # Reduced motion: confetti stands still and the fireworks show as still bursts.
+        # Reduced motion: the stars and fireworks stand still.
         "@media (prefers-reduced-motion: reduce)": {
-            **{sel: {"animation": "none"} for sel in moving},
-            ", ".join(BURST_HOSTS): {"animation": "none", "opacity": "0.5", "transform": "none"},
+            "html::before": {"animation": "none"},
+            ", ".join(BURST_HOSTS): {"animation": "none", "opacity": "0.45", "transform": "none"},
         },
     }

@@ -374,7 +374,7 @@ def test_new_year_is_decorated():
     theme = themes.BY_ID["new-year"]
     assert theme.ready
     assert theme.info(NEW_YEAR)["decorated"] is True
-    assert "Fireworks" in theme.description
+    assert "fireworks" in theme.description.lower()
 
 
 def test_new_year_fireworks_each_have_their_own_rhythm_and_stay_off_the_sidebar():
@@ -394,16 +394,17 @@ def test_new_year_fireworks_each_have_their_own_rhythm_and_stay_off_the_sidebar(
     assert len(rhythms) == len(new_year.BURST_HOSTS)
 
 
-def test_new_year_never_blocks_clicks_and_keeps_the_sidebar_on_top():
+def test_new_year_sits_behind_the_page_and_never_blocks_clicks():
     from dagwick import new_year
 
     css = new_year.global_css()
     drawn = {sel: rule for sel, rule in css.items() if "content" in rule}
     assert drawn
     assert all(rule["pointerEvents"] == "none" for rule in drawn.values())
-    layer = int(css["body::before"]["zIndex"])
-    assert int(css['[data-testid="nav-sidebar"]']["zIndex"].split()[0]) > layer
-    assert layer < 1400  # Airflow's menus and dialogs stay on top
+    # Behind Airflow's page, so it never covers text, buttons or menus.
+    assert all(rule["zIndex"] == "-1" for rule in drawn.values())
+    # Nothing hangs off the sidebar: it would be drawn in the sidebar's layer, on top.
+    assert not any("nav-" in sel for sel in css)
 
 
 def test_new_year_stands_still_for_reduced_motion():
@@ -419,12 +420,12 @@ def test_new_year_stands_still_for_reduced_motion():
     assert bursts["opacity"] != "0"  # the fireworks show as still bursts
 
 
-def test_new_year_confetti_settles_on_cards_and_clears_when_switching():
+def test_new_year_leaves_the_cards_alone_and_stays_small():
     css = themes.theme_css("new-year")
-    assert '[data-testid="card-list"] > *::after' in css
+    assert not any("card" in sel for sel in css)
     sheets = themes.theme_sheets("new-year")
-    assert '[data-testid="card-list"]{padding-top:0;}' in sheets["reset"]
-    assert len(sheets["css"]) < 150_000  # sent with Airflow's config on every page load
+    assert sheets["hide"] and sheets["reset"]  # can be switched off without a reload
+    assert len(sheets["css"]) < 100_000  # sent with Airflow's config on every page load
 
 
 def test_new_year_is_applied_by_date_and_by_hand():

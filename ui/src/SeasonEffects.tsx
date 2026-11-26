@@ -101,9 +101,9 @@ function Fireworks() {
   return (
     <>
       {[
-        { left: "12%", top: "18%", color: "#f472b6", delay: 0 },
-        { left: "82%", top: "14%", color: "#60a5fa", delay: 1.1 },
-        { left: "64%", top: "30%", color: "#fde047", delay: 2.2 },
+        { left: "12%", top: "20%", color: "#fcd34d", delay: 0 },
+        { left: "82%", top: "16%", color: "#a5b4fc", delay: 1.8 },
+        { left: "64%", top: "32%", color: "#fbbf24", delay: 3.6 },
       ].map((f, i) => (
         <span key={i} className="dagwick-firework" style={{ left: f.left, top: f.top, animationDelay: sec(f.delay) }}>
           {range(12).map((j) => (
@@ -369,8 +369,8 @@ const SCENES: Record<SeasonId, () => ReactNode> = {
   halloween: () => <Bats />,
   "new-year": () => (
     <>
+      <Stars />
       <Fireworks />
-      <Confetti />
     </>
   ),
   birthday: () => (

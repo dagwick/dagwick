@@ -456,7 +456,7 @@ html:not(.dark) .dagwick-bat svg { filter: none; }
 .dagwick-confetti { position: absolute; top: 0; width: 7px; height: 4px; border-radius: 1px;
   animation-name: dagwick-fall, dagwick-spin; animation-timing-function: linear; animation-iteration-count: infinite; }
 @keyframes dagwick-spin { to { transform: rotate(360deg); } }
-.dagwick-firework { position: absolute; width: 0; height: 0; animation: dagwick-burst 3.3s ease-out infinite; }
+.dagwick-firework { position: absolute; width: 0; height: 0; animation: dagwick-burst 5.4s ease-out infinite; }
 .dagwick-firework i { position: absolute; width: 4px; height: 4px; border-radius: 50%; }
 @keyframes dagwick-burst { 0% { transform: scale(.2); opacity: 0; } 15% { opacity: 1; } 60% { transform: scale(1.2); opacity: .9; } 100% { transform: scale(1.6); opacity: 0; } }
 .dagwick-balloon { position: absolute; bottom: 0; width: 22px; height: 28px; border-radius: 50% 50% 46% 46%; opacity: .85; animation: dagwick-rise linear infinite; }

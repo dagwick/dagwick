@@ -244,8 +244,8 @@ THEMES: tuple[Theme, ...] = (
     Theme(
         id="new-year",
         name="New Year",
-        description="Fireworks burst over Airflow, confetti drifts down and settles on the "
-        "cards, and a warm glow rises from the bottom of the window.",
+        description="A calm midnight sky behind Airflow: soft gold fireworks bloom and fade, "
+        "stars twinkle, and a warm glow rises from the bottom. Nothing covers the page.",
         start=(12, 31),
         end=(1, 2),
         css=new_year.global_css,
