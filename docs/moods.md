@@ -15,7 +15,7 @@ see the [config-only themes](https://github.com/dagwick/dagwick/blob/main/themes
 | 🍪 Eid | Eid al-Fitr (3 days) and Eid al-Adha (4 days) | An emerald candle with a gold band, a plate of kulîçe, a crescent, bunting |
 | ✍️ Kurdish Language Day | May 15 | Reading glasses, a candle on a stack of books, a quill and inkwell, Kurdish letters floating up |
 | 🎄 Christmas | Dec 18 – 26 | Santa hat, a candy-striped candle in a pine wreath, falling snow, a snow bank |
-| 🎉 New Year | Dec 31 – Jan 2 | Party hat, a midnight-blue candle with gold stars, soft gold fireworks, twinkling stars |
+| 🥂 New Year | Dec 31 – Jan 2 | A black top hat with a gold band, a midnight-blue candle with gold stars and a clock at midnight, soft gold fireworks, twinkling stars |
 | 🎃 Halloween | Oct 24 – Nov 1 | Green flame, witch hat, a jack-o'-lantern with a spider, bats flying under a full moon |
 | 🌙 Ramadan | the month of Ramadan | Wick inside a fanous, crescent moon, stars, hanging lanterns |
 | 🎂 Dagwick's birthday | Nov 8 | Party hat, a candle on a cupcake, balloons, confetti |

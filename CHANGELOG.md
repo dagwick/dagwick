@@ -13,7 +13,9 @@ All notable changes to this project are documented here. The format follows
   warm glow rises from the bottom of the window. Everything is drawn behind the
   page, so it never covers text, buttons or menus. CSS only, moves on the
   graphics card, and stands still for viewers who prefer reduced motion. The
-  banner's New Year look is calmer too: stars and gold fireworks, no confetti.
+  banner's New Year look no longer looks like Dagwick's birthday: Wick wears a
+  black top hat with a gold band instead of a party hat, a gold clock at midnight
+  stands next to the candle, the sign is 🥂, and stars replace the confetti.
   Christmas snow now ends on 30 December so New Year has its own days.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
