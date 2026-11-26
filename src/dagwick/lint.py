@@ -91,8 +91,9 @@ def _decorator_name(node: ast.expr) -> str:
 
 def _str_arg(call: ast.Call, name: str, position: int | None = None) -> str | None:
     for kw in call.keywords:
-        if kw.arg == name and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
-            return kw.value.value
+        value = kw.value
+        if kw.arg == name and isinstance(value, ast.Constant) and isinstance(value.value, str):
+            return value.value
     if position is not None and len(call.args) > position:
         arg = call.args[position]
         if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
@@ -123,9 +124,12 @@ class Locator:
                 for target in node.targets:
                     if isinstance(target, ast.Name):
                         self.assigned.setdefault(target.id, node.value)
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                if node.value is not None:
-                    self.assigned.setdefault(node.target.id, node.value)
+            elif (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and node.value is not None
+            ):
+                self.assigned.setdefault(node.target.id, node.value)
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 for deco in node.decorator_list:
                     kind = _decorator_name(deco)
@@ -137,8 +141,10 @@ class Locator:
                         task_id = (call and _str_arg(call, "task_id")) or node.name
                         self.tasks.setdefault(task_id, node)
             elif isinstance(node, ast.Call):
-                name = node.func.id if isinstance(node.func, ast.Name) else (
-                    node.func.attr if isinstance(node.func, ast.Attribute) else ""
+                name = (
+                    node.func.id
+                    if isinstance(node.func, ast.Name)
+                    else (node.func.attr if isinstance(node.func, ast.Attribute) else "")
                 )
                 if name == "DAG":
                     dag_id = _str_arg(node, "dag_id", 0)
@@ -214,7 +220,8 @@ class Locator:
                     codes = m.group("codes")
                     if not codes:
                         return True, frozenset()
-                    return False, frozenset(c.strip().upper() for c in codes.split(",") if c.strip())
+                    listed = (c.strip().upper() for c in codes.split(","))
+                    return False, frozenset(c for c in listed if c)
         return None
 
 
@@ -255,7 +262,7 @@ def diagnostics(report: dict[str, Any], loc: Locator, fixable: dict[str, str]) -
             elif check_id == "sensor_slots":
                 task_id = item.split(":", 1)[0]
                 line, col = loc.task(task_id, dag_id)
-                message = f"{problem} `{task_id}`{item[len(task_id):]}"
+                message = f"{problem} `{task_id}`{item[len(task_id) :]}"
             else:
                 line, col = loc.task(item, dag_id)
                 message = f"{problem}: `{item}`"
