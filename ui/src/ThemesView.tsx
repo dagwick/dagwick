@@ -192,6 +192,7 @@ function Themes({ themes }: { themes: ThemeInfo[] }) {
 function Scene({ id }: { id: string }) {
   if (id === "halloween") return <HalloweenScene />;
   if (id === "christmas") return <SnowScene />;
+  if (id === "new-year") return <NewYearScene />;
   return <BannerScene id={id} />;
 }
 
@@ -201,7 +202,6 @@ const BANNER_SCENES: Record<string, [string, string]> = {
   eid: ["#3b2a07", "#a16207"],
   ramadan: ["#0b2a3a", "#134e4a"],
   "language-day": ["#422006", "#b45309"],
-  "new-year": ["#1e1b4b", "#6d28d9"],
   birthday: ["#500724", "#be185d"],
   diwali: ["#431407", "#c2410c"],
   "lantern-festival": ["#450a0a", "#b91c1c"],
@@ -271,6 +271,47 @@ function HalloweenScene() {
       ))}
       <ellipse cx="60" cy="104" rx="90" ry="14" fill="#7c3aed" opacity=".35" />
       <ellipse cx="170" cy="106" rx="80" ry="12" fill="#4c1d95" opacity=".45" />
+    </svg>
+  );
+}
+
+/** The New Year theme's picture: fireworks over the night and falling confetti. */
+function NewYearScene() {
+  const bursts: [number, number, number, string, string][] = [
+    [60, 38, 26, "#fbbf24", "#f472b6"],
+    [150, 30, 20, "#22d3ee", "#a78bfa"],
+    [110, 62, 14, "#4ade80", "#fbbf24"],
+  ];
+  const confetti: [number, number, number, string][] = [
+    [24, 84, 20, "#f472b6"],
+    [86, 96, -30, "#fbbf24"],
+    [132, 88, 45, "#22d3ee"],
+    [178, 98, -10, "#a78bfa"],
+    [200, 76, 60, "#4ade80"],
+  ];
+  return (
+    <svg className="dagwick-theme-scene" viewBox="0 0 220 110" role="img" aria-label="Fireworks and confetti">
+      <rect width="220" height="110" fill="#17133a" />
+      <rect y="70" width="220" height="40" fill="#f59e0b" opacity=".12" />
+      {bursts.map(([x, y, r, outer, inner], b) => (
+        <g key={b} transform={`translate(${x} ${y})`}>
+          {Array.from({ length: 12 }, (_, i) => {
+            const a = (i / 12) * Math.PI * 2;
+            return (
+              <g key={i}>
+                <circle cx={Math.cos(a) * r} cy={Math.sin(a) * r} r={1.6} fill={outer} />
+                <circle cx={Math.cos(a) * r * 0.7} cy={Math.sin(a) * r * 0.7} r={1.1} fill={outer} opacity=".6" />
+                {i % 2 === 0 && (
+                  <circle cx={Math.cos(a + 0.26) * r * 0.42} cy={Math.sin(a + 0.26) * r * 0.42} r={1.1} fill={inner} />
+                )}
+              </g>
+            );
+          })}
+        </g>
+      ))}
+      {confetti.map(([x, y, turn, color], i) => (
+        <rect key={i} x={x} y={y} width="3.5" height="8" rx="1" fill={color} transform={`rotate(${turn} ${x} ${y})`} />
+      ))}
     </svg>
   );
 }

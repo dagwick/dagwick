@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **New Year theme** (31 December to 2 January): fireworks burst over Airflow,
+  each in its own colours and rhythm; confetti and gold glitter drift down,
+  some settles on top of the cards, and a warm glow rises from the bottom of the
+  window. Like the other themes it is CSS only, moves on the graphics card,
+  never blocks clicks, keeps Airflow's sidebar clear and stands still for
+  viewers who prefer reduced motion. Christmas snow now ends on 30 December so
+  New Year has its own days.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
   check id only (never the DAG id, file or code; the link sends no referrer).

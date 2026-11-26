@@ -20,8 +20,8 @@ in [issues](https://github.com/dagwick/dagwick/issues).
 - [ ] **1.0**, once the check interface is stable, so check-pack authors can
       rely on it.
 - [ ] **Scores as metrics** for dashboards, next to the existing CSV download.
-- [ ] **More built-in themes:** Newroz, Kurdish Language Day, Eid, Ramadan and
-      New Year (now "Coming soon" on the Themes page).
+- [ ] **More built-in themes:** Ramadan, Eid, Newroz and Kurdish Language Day
+      (now "Coming soon" on the Themes page).
 - [ ] **Translations of the UI**, starting with Kurdish.
 
 ### Project health (ongoing)
@@ -62,6 +62,7 @@ and will not change in the next year:
 - [x] Seasonal moods, on by default (0.3.0)
 - [x] Airflow-wide seasonal themes: config-only files, and built in for
       Christmas and Halloween (0.3.0)
+- [x] New Year theme: fireworks and confetti over all of Airflow (0.4.0)
 - [x] Signed releases to PyPI with Trusted Publishing, Dependabot, CodeQL,
       fuzzing and an OpenSSF Scorecard badge
 - [x] OpenSSF Best Practices passing badge
