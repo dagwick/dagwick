@@ -21,7 +21,7 @@ in [issues](https://github.com/dagwick/dagwick/issues).
       rely on it.
 - [ ] **Scores as metrics** for dashboards, next to the existing CSV download.
 - [ ] **More built-in themes:** Ramadan, Eid, Newroz and Kurdish Language Day
-      (now "Coming soon" on the Themes page).
+      (for now, only Dagwick's banner dresses up on their dates).
 - [ ] **Translations of the UI**, starting with Kurdish.
 
 ### Project health (ongoing)

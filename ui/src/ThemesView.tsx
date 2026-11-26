@@ -139,9 +139,9 @@ function Themes({ themes }: { themes: ThemeInfo[] }) {
       )}
 
       <div className="dagwick-theme-list">
-        {/* Ready to apply first, then those coming soon; each group keeps its order. */}
-        {[...themes]
-          .sort((a, b) => Number(comingSoon(a)) - Number(comingSoon(b)))
+        {/* Only themes that can be applied; one coming soon shows up once it's decorated. */}
+        {themes
+          .filter((t) => !comingSoon(t))
           .map((t) => {
             const status = themeStatus(t, themes, choice);
             const on = status === "applied" || status === "showing";
