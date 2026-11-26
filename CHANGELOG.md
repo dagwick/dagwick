@@ -22,7 +22,8 @@ All notable changes to this project are documented here. The format follows
   page so it never covers text or buttons. The Kurdish sun with
   its 21 rays turns slowly in the corner, bonfires flicker on mountains drawn
   as fine lines along the bottom (so the page shows through), sparks rise from
-  them, and nergiz and red tulips sway in the bottom corners. Like Christmas and Halloween it
+  them, nergiz and red tulips sway in the bottom corners, and fresh grass with
+  tiny flowers grows along the top of every card. Like Christmas and Halloween it
   shows by itself on its dates, can be applied any day from the **Themes** tab,
   and stands still for
   viewers who prefer reduced motion.

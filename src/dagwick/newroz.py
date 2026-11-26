@@ -4,7 +4,8 @@ Dawn breaks behind three ranges of mountains along the bottom of the window, dra
 as fine ridgelines so the page shows through them. Bonfires burn on four peaks:
 their flames flicker, their light breathes on the hillsides and sparks rise from
 them. Nergiz (narcissus) and red tulips sway in the bottom corners, and the Kurdish
-sun, with its 21 rays, turns slowly in the top-right corner.
+sun, with its 21 rays, turns slowly in the top-right corner. Fresh grass grows on
+top of the cards.
 
 Everything is drawn behind Airflow's page and ignores the mouse, so it never covers
 Airflow's text, buttons, menus or sidebar. Movement uses CSS transforms, fades or a
@@ -17,7 +18,7 @@ import math
 import random
 from typing import Any
 
-from dagwick.snow import url
+from dagwick.snow import CAPPED, url
 
 SEED = 321  # 21 March
 
@@ -273,6 +274,89 @@ def flowers_svg(seed: int) -> str:
     )
 
 
+GRASS_H = 18  # px; the card's top edge is GRASS_EDGE px down from the top of the grass
+GRASS_EDGE = 14
+GREENS = ("#16a34a", "#22c55e", "#4ade80", "#65a30d", "#84cc16")
+
+
+def _shifts(x: float, width: int) -> tuple[int, ...]:
+    """Where to draw something at ``x`` so a repeat joins its neighbours: also one repeat
+    over when it sits near an end."""
+    near = 30
+    return (0, width) if x < near else (0, -width) if x > width - near else (0,)
+
+
+def grass_svg(seed: int, width: int) -> str:
+    """One repeat of spring grass growing along a card's top edge: clumps of blades with
+    gaps between them, and here and there a tiny flower. A clump near an end is also
+    drawn one repeat over, so the repeats join without a seam."""
+    rng = random.Random(seed)
+    base = GRASS_EDGE + 1.5
+    blades, flowers = [], []
+    for _ in range(rng.randint(4, 7)):
+        centre, spread = rng.uniform(0, width), rng.uniform(10, 26)
+        for _ in range(rng.randint(7, 11)):
+            x = centre + rng.uniform(-spread, spread)
+            tall = rng.uniform(5, GRASS_EDGE - 1) * (1 - abs(x - centre) / (spread * 1.6))
+            lean = rng.uniform(-4, 4)
+            w = rng.uniform(1.1, 1.9)
+            colour = rng.choice(GREENS)
+            for shift in _shifts(x, width):
+                bx = x + shift
+                blades.append(
+                    f"<path d='M{bx - w:.1f} {base} Q{bx + lean * 0.3:.0f} {base - tall * 0.6:.0f} "
+                    f"{bx + lean:.1f} {base - tall:.1f} Q{bx + lean * 0.3 + w * 0.6:.1f} "
+                    f"{base - tall * 0.5:.1f} {bx + w:.1f} {base}Z' fill='{colour}'/>"
+                )
+        if rng.random() < 0.6:
+            fx = centre + rng.uniform(-spread / 2, spread / 2)
+            fy = base - rng.uniform(7, GRASS_EDGE - 1)
+            petal = rng.choice(("#fffdf5", "#fde047", "#f87171"))
+            for shift in _shifts(fx, width):
+                flowers.append(
+                    f"<path d='M{fx + shift:.1f} {base} L{fx + shift:.1f} {fy:.1f}' "
+                    "stroke='#15803d' stroke-width='.8'/>"
+                    f"<circle cx='{fx + shift:.1f}' cy='{fy:.1f}' r='2' fill='{petal}'/>"
+                    f"<circle cx='{fx + shift:.1f}' cy='{fy:.1f}' r='.8' fill='#f59e0b'/>"
+                )
+    return (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{GRASS_H}'>"
+        f"{''.join(blades)}{''.join(flowers)}</svg>"
+    )
+
+
+def grass() -> dict[str, Any]:
+    """Fresh grass growing on top of the cards, in three random variants, like snow at
+    Christmas. It rises above each card's top edge, so it never covers the card's text."""
+    # Airflow's DAG list clips its top edge: leave room for the first card's grass.
+    css: dict[str, Any] = {'[data-testid="card-list"]': {"paddingTop": f"{GRASS_EDGE}px"}}
+    # The small grade cards stay bare: grass would crowd their numbers.
+    targets = {sel: pick for sel, pick in CAPPED.items() if sel != ".dagwick-gcard"}
+    for sel in targets:
+        css[sel] = {"position": "relative"}
+        css[f"{sel}::before"] = {
+            "content": '""',
+            "position": "absolute",
+            "top": f"-{GRASS_EDGE}px",
+            "left": "6px",
+            "right": "6px",
+            "height": f"{GRASS_H}px",
+            "backgroundRepeat": "repeat-x",
+            "pointerEvents": "none",
+            "zIndex": "1",
+        }
+    for k in range(3):
+        rng = random.Random(SEED + 600 + k)
+        width = rng.randint(260, 380)
+        key = ", ".join(f"{pick(k + 1)}::before" for pick in targets.values())
+        css[key.replace("5n+", "3n+")] = {
+            "backgroundImage": url(grass_svg(SEED + 700 + k, width)),
+            "backgroundSize": f"{width}px {GRASS_H}px",
+            "backgroundPosition": f"{rng.randint(0, width)}px 0",
+        }
+    return css
+
+
 FLOWERS_LEFT = '[data-testid="main-content"]::before'
 FLOWERS_RIGHT = '[data-testid="main-content"]::after'
 MOVING = (
@@ -308,6 +392,7 @@ def global_css() -> dict[str, Any]:
         "willChange": "transform",
     }
     return {
+        **grass(),
         # Sparks rising from the fires (painted first, so the hills cover their start).
         "html::before": {
             **layer,
