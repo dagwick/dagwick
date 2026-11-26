@@ -4,17 +4,15 @@ Dawn breaks behind three ranges of mountains along the bottom of the window, dra
 as fine ridgelines so the page shows through them. Bonfires burn on four peaks:
 their flames flicker, their light breathes on the hillsides and sparks rise from
 them. Nergiz (narcissus) and red tulips sway in the bottom corners, and the Kurdish
-sun, with its 21 rays, turns slowly in the top-right corner. A greeting at the foot of
-the window, "Newroz pîroz be", says what it is all for.
+sun, with its 21 rays, turns slowly in the top-right corner.
 
-Everything is drawn above the page but ignores the mouse, stays below Airflow's menus
-and dialogs, and leaves the sidebar on top. Movement uses CSS transforms, fades or a
+Everything is drawn behind Airflow's page and ignores the mouse, so it never covers
+Airflow's text, buttons, menus or sidebar. Movement uses CSS transforms, fades or a
 few still frames, and viewers who prefer reduced motion get a still scene.
 """
 
 from __future__ import annotations
 
-import json
 import math
 import random
 from typing import Any
@@ -23,10 +21,9 @@ from dagwick.snow import url
 
 SEED = 321  # 21 March
 
-# Above Airflow's content but below its menus and dialogs (Chakra puts those at 1400+);
-# Airflow's sidebar is lifted just above the decorations so they never cover it.
-TOP = "1000"
-SIDEBAR = "1001"
+# Behind Airflow's page: the scene shows in the space Airflow leaves empty and never
+# covers its text, buttons, menus or sidebar.
+BEHIND = "-1"
 
 SUN_RAYS = 21  # the sun on the Kurdish flag has 21 rays, for the 21st of March
 GOLD = "#fbbf24"
@@ -276,13 +273,6 @@ def flowers_svg(seed: int) -> str:
     )
 
 
-# A greeting, so anyone can tell what the scene is for.
-# The Sorani words sit in a bidi isolate (U+2068 ... U+2069), so the browser does not
-# reorder the dots and the English around the right-to-left text.
-GREETING = "Newroz pîroz be  ·  \u2068نەورۆز پیرۆز بێت\u2069  ·  Happy Newroz"
-GREETING_HOST = "body::before"
-# The red, white and green of the Kurdish flag, as a thin stripe under the greeting.
-FLAG_STRIPE = "linear-gradient(90deg, #ed2024 0 33.3%, #ffffff 33.3% 66.6%, #278e43 66.6% 100%)"
 FLOWERS_LEFT = '[data-testid="main-content"]::before'
 FLOWERS_RIGHT = '[data-testid="main-content"]::after'
 MOVING = (
@@ -297,7 +287,7 @@ MOVING = (
 
 def global_css() -> dict[str, Any]:
     """Newroz as Airflow theme ``globalCss`` (selector -> style)."""
-    layer = {"content": '""', "position": "fixed", "pointerEvents": "none", "zIndex": TOP}
+    layer = {"content": '""', "position": "fixed", "pointerEvents": "none", "zIndex": BEHIND}
     band = {
         **layer,
         "left": "0",
@@ -335,32 +325,6 @@ def global_css() -> dict[str, Any]:
             "to": {"transform": f"translate3d(0, -{SPARK_H}px, 0)"},
         },
         # A warm dawn behind the hills, and spring green at the foot of the page.
-        # The greeting, centred at the foot of the window above the fires.
-        GREETING_HOST: {
-            **layer,
-            "content": json.dumps(GREETING, ensure_ascii=False),
-            "zIndex": SIDEBAR,  # above the flames, so they never burn through the words
-            "left": "50%",
-            "bottom": "14px",
-            "transform": "translateX(-50%)",
-            "whiteSpace": "nowrap",
-            "padding": "6px 16px 8px",
-            "borderRadius": "999px",
-            "font": "600 13px/1.2 system-ui, -apple-system, 'Segoe UI', sans-serif",
-            "letterSpacing": "0.02em",
-            "color": "#fde68a",
-            "backgroundColor": "rgba(15, 23, 42, 0.78)",
-            "backgroundImage": FLAG_STRIPE,
-            "backgroundRepeat": "no-repeat",
-            "backgroundSize": "calc(100% - 32px) 2px",
-            "backgroundPosition": "center bottom 4px",
-            "boxShadow": "0 0 0 1px rgba(251, 191, 36, 0.35), 0 4px 18px rgba(249, 115, 22, 0.25)",
-        },
-        f"html.light {GREETING_HOST}": {
-            "color": "#9a3412",
-            "backgroundColor": "rgba(255, 255, 255, 0.9)",
-            "boxShadow": "0 0 0 1px rgba(234, 88, 12, 0.35), 0 4px 18px rgba(249, 115, 22, 0.18)",
-        },
         # The sun in the corner, turning slowly.
         "#root::before": {
             **layer,
@@ -417,8 +381,5 @@ def global_css() -> dict[str, Any]:
             "from": {"backgroundPosition": "0 bottom"},
             "to": {"backgroundPosition": f"-{W * FLAME_FRAMES}px bottom"},
         },
-        # Keep Airflow's sidebar (and its user menu) above the decorations. Airflow's own
-        # style for the sidebar outranks theme styles, hence !important.
-        '[data-testid="nav-sidebar"]': {"zIndex": f"{SIDEBAR} !important"},
         "@media (prefers-reduced-motion: reduce)": {host: {"animation": "none"} for host in MOVING},
     }
