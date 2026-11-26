@@ -376,12 +376,38 @@ def test_newroz_dates_and_scene():
     still = css["@media (prefers-reduced-motion: reduce)"]
     for host in newroz.MOVING:
         assert "animation" in css[host]
-        assert still[host] == {"animation": "none"}
+        assert still[host]["animation"] == "none"
     layers = {host: style for host, style in css.items() if "zIndex" in style}
     assert len(layers) >= 5
     for style in layers.values():  # behind the page: never over Airflow's text or buttons
         assert style["zIndex"] == "-1" and style["pointerEvents"] == "none"
     assert newroz.sun_svg(100).count("L") == 2 * newroz.SUN_RAYS  # 21 rays
+    # Every image is still, so the browser draws it once and CSS only moves it.
+    for host, style in css.items():
+        assert "animate" not in json.dumps(style), host
+    assert "#ffe3a3" in newroz.torches_svg()  # the line of torches on the hillside
     assert len(json.dumps(css)) < 100_000
     sheets = themes.theme_sheets("newroz")
     assert "#root::after" in sheets["hide"] and "html::before" in sheets["reset"]
+
+
+def test_lantern_festival_dates_and_scene():
+    from dagwick import lantern
+
+    theme = themes.BY_ID["lantern-festival"]
+    assert theme.ready
+    assert pick_theme({}, date(2027, 2, 20)) is theme  # over Ramadan, which is coming soon
+    assert pick_theme({}, date(2027, 2, 21)) is None
+    css = lantern.global_css()
+    for host in lantern.HOSTS:  # all behind the page, out of the mouse's way
+        assert css[host]["zIndex"] == "-1" and css[host]["pointerEvents"] == "none"
+    still = css["@media (prefers-reduced-motion: reduce)"]
+    for host in lantern.MOVING:
+        assert "animation" in css[host] and still[host]["animation"] == "none"
+    # Every image is still, so the browser draws it once and CSS only moves it.
+    for host, style in css.items():
+        assert "animate" not in json.dumps(style), host
+    frames = css["@keyframes dagwickShooting"]
+    assert len(frames) == 4 * len(lantern.SHOOTING) + 1 and frames["100%"] == frames["0%"]
+    assert lantern.string_svg().count("<g id='ln'>") == 1  # drawn once, then reused
+    assert len(json.dumps(css)) < 100_000

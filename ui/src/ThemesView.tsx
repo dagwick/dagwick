@@ -193,6 +193,7 @@ function Scene({ id }: { id: string }) {
   if (id === "halloween") return <HalloweenScene />;
   if (id === "christmas") return <SnowScene />;
   if (id === "newroz") return <NewrozScene />;
+  if (id === "lantern-festival") return <LanternScene />;
   return <BannerScene id={id} />;
 }
 
@@ -205,7 +206,6 @@ const BANNER_SCENES: Record<string, [string, string]> = {
   "language-day": ["#422006", "#b45309"],
   birthday: ["#500724", "#be185d"],
   diwali: ["#431407", "#c2410c"],
-  "lantern-festival": ["#450a0a", "#b91c1c"],
   "carsema-sor": ["#14532d", "#dc2626"],
 };
 
@@ -293,7 +293,7 @@ function NewrozScene() {
       className="dagwick-theme-scene"
       viewBox="0 0 220 110"
       role="img"
-      aria-label="The Kurdish sun over mountains with bonfires"
+      aria-label="The Kurdish sun over mountains with bonfires and torches"
     >
       <defs>
         <linearGradient id="dagwick-nz-sky" x1="0" y1="0" x2="0" y2="1">
@@ -306,6 +306,11 @@ function NewrozScene() {
         </radialGradient>
       </defs>
       <rect width="220" height="110" fill="url(#dagwick-nz-sky)" />
+      {[118, 140, 162].map((a) => {
+        const r = (d: number) => (a + d) * (Math.PI / 180);
+        const p = (d: number) => `${182 + 170 * Math.cos(r(d))} ${30 + 170 * Math.sin(r(d))}`;
+        return <path key={a} d={`M182 30 L${p(-3)} L${p(3)}Z`} fill="#fde68a" opacity=".07" />;
+      })}
       <circle cx="182" cy="30" r="24" fill="#fde68a" opacity=".12" />
       <path d={rays} fill="#fbbf24" />
       <circle cx="182" cy="30" r="8" fill="#fbbf24" />
@@ -340,11 +345,133 @@ function NewrozScene() {
       ))}
       {[
         [80, 40],
-        [140, 30],
-        [60, 24],
-        [120, 52],
+        [140, 48],
+        [60, 30],
+        [120, 56],
       ].map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r="1.2" fill="#fdba74" opacity=".8" />
+      ))}
+      {[
+        [112, 79],
+        [120, 78],
+        [128, 76.5],
+        [136, 75],
+        [143, 73.6],
+      ].map(([x, y]) => (
+        <g key={x}>
+          <circle cx={x} cy={y} r="2.4" fill="#fb923c" opacity=".35" />
+          <circle cx={x} cy={y} r=".7" fill="#ffe3a3" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** The Lantern Festival: red lanterns on a string, the full moon and rising sky lanterns. */
+function LanternScene() {
+  const hanging: [number, number, number][] = [
+    [30, 22, 1],
+    [72, 34, 0.85],
+    [112, 26, 1.05],
+    [152, 36, 0.9],
+  ];
+  const sky: [number, number, number][] = [
+    [40, 92, 1],
+    [96, 76, 0.75],
+    [150, 96, 0.9],
+    [196, 70, 0.6],
+  ];
+  const stars: [number, number][] = [
+    [18, 40],
+    [58, 58],
+    [92, 44],
+    [140, 60],
+    [168, 50],
+    [206, 56],
+    [120, 16],
+  ];
+  const plum: [number, number, string][] = [
+    [14, 92, "#f48fb1"],
+    [22, 84, "#fbd3df"],
+    [30, 80, "#e0457b"],
+    [40, 77, "#f48fb1"],
+    [12, 82, "#fbd3df"],
+  ];
+  return (
+    <svg
+      className="dagwick-theme-scene"
+      viewBox="0 0 220 110"
+      role="img"
+      aria-label="Red lanterns, sky lanterns and a shooting star under a full moon, with plum blossom"
+    >
+      <defs>
+        <linearGradient id="dagwick-lf-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#141a33" />
+          <stop offset="1" stopColor="#3a1a1f" />
+        </linearGradient>
+        <radialGradient id="dagwick-lf-red" cx=".45" cy=".45" r=".65">
+          <stop offset="0" stopColor="#ffd59a" />
+          <stop offset=".35" stopColor="#f8613a" />
+          <stop offset=".8" stopColor="#d61f1f" />
+          <stop offset="1" stopColor="#7f1414" />
+        </radialGradient>
+        <radialGradient id="dagwick-lf-halo">
+          <stop offset="0" stopColor="#ffb46b" stopOpacity=".55" />
+          <stop offset="1" stopColor="#ff8a3d" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="220" height="110" fill="url(#dagwick-lf-sky)" />
+      <circle cx="186" cy="28" r="22" fill="#ffe7a8" opacity=".12" />
+      <circle cx="186" cy="28" r="12" fill="#f8e3a8" />
+      {stars.map(([x, y]) => (
+        <circle key={`${x}-${y}`} cx={x} cy={y} r=".7" fill="#fff6dc" opacity=".6" />
+      ))}
+      <defs>
+        <linearGradient id="dagwick-lf-tail" x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0" stopColor="#fffbe8" />
+          <stop offset="1" stopColor="#ffd76a" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <g transform="translate(150 46) rotate(24)">
+        <rect x="-34" y="-.6" width="34" height="1.2" rx=".6" fill="url(#dagwick-lf-tail)" />
+        <circle r="3" fill="#fffbe8" opacity=".25" />
+        <circle r="1" fill="#fffbe8" />
+      </g>
+      <path d="M0 8 Q55 26 110 8 T220 8" fill="none" stroke="#5b4630" strokeWidth=".8" />
+      {sky.map(([x, y, s]) => (
+        <g key={x} transform={`translate(${x} ${y}) scale(${s})`}>
+          <circle r="11" fill="url(#dagwick-lf-halo)" />
+          <path d="M-4 -6 Q0 -8 4 -6 L3 4 Q0 5 -3 4Z" fill="#ffc25c" />
+          <ellipse cy="4" rx="3" ry=".8" fill="#fff8dc" />
+        </g>
+      ))}
+      {hanging.map(([x, drop, s]) => (
+        <g key={x} transform={`translate(${x} ${8 + Math.sin((x / 220) * Math.PI * 2) * 4}) scale(${s})`}>
+          <path d={`M0 0 V${drop - 10}`} stroke="#5b4630" strokeWidth=".6" />
+          <g transform={`translate(0 ${drop - 10})`}>
+            <circle cy="9" r="14" fill="url(#dagwick-lf-halo)" />
+            <rect x="-3" y="0" width="6" height="2" rx=".6" fill="#e9b949" />
+            <ellipse cy="9" rx="8" ry="7.2" fill="url(#dagwick-lf-red)" />
+            <rect x="-3.4" y="15.6" width="6.8" height="2" rx=".6" fill="#e9b949" />
+            <path d="M0 17.6 V24" stroke="#c81e1e" strokeWidth="1" />
+          </g>
+        </g>
+      ))}
+      <path
+        d="M0 104 L10 94 L14 84 L24 80 L40 76 M14 84 L12 76"
+        fill="none"
+        stroke="#4a2e26"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {plum.map(([x, y, c]) => (
+        <g key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
+          {[0, 72, 144, 216, 288].map((r) => (
+            <circle key={r} cy="-1.9" r="2" fill={c} transform={`rotate(${r})`} />
+          ))}
+          <circle r=".9" fill="#b3123f" />
+        </g>
       ))}
     </svg>
   );

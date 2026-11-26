@@ -15,7 +15,8 @@ import math
 import random
 from typing import Any
 
-from dagwick.snow import CAPPED, url
+from dagwick.scene import url
+from dagwick.snow import CAPPED
 
 SEED = 1031
 

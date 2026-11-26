@@ -14,7 +14,8 @@ import math
 import random
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import quote
+
+from dagwick.scene import url
 
 SEED = 1225  # fixed, so the snow is the same on every start
 
@@ -266,10 +267,6 @@ def caps(theme: str) -> dict[str, Any]:
             "backgroundPosition": f"{rng.randint(0, big_w)}px 0, {rng.randint(0, small_w)}px 0",
         }
     return css
-
-
-def url(svg: str) -> str:
-    return f'url("data:image/svg+xml,{quote(svg, safe="")}")'
 
 
 def global_css() -> dict[str, Any]:

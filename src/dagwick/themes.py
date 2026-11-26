@@ -24,7 +24,7 @@ from functools import cache
 from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
-from dagwick import halloween, newroz, snow
+from dagwick import halloween, lantern, newroz, snow
 
 log = logging.getLogger(__name__)
 
@@ -220,9 +220,10 @@ THEMES: tuple[Theme, ...] = (
     Theme(
         id="newroz",
         name="Newroz",
-        description="Bonfires burn on the mountains along the bottom of Airflow with "
-        "sparks rising, nergiz and red tulips sway in the corners, the Kurdish sun turns "
-        "slowly, all behind Airflow's page.",
+        description="Bonfires burn on the mountains along the bottom of Airflow, embers "
+        "drift up across the page and torches climb to the fires, the Kurdish sun sends "
+        "out the dawn light, and nergiz and red tulips sway in the corners, all behind Airflow's "
+        "page.",
         start=(3, 19),
         end=(3, 23),
         css=newroz.global_css,
@@ -238,9 +239,12 @@ THEMES: tuple[Theme, ...] = (
     Theme(
         id="lantern-festival",
         name="Lantern Festival",
-        description=COMING_SOON,
+        description="Red lanterns sway on a string along the top of Airflow, paper sky "
+        "lanterns drift up from the bottom, shooting stars streak past the first full "
+        "moon of the year and plum blossom drops petals in the corners, all behind Airflow's page.",
         windows=LANTERN_FESTIVAL,
         calendar="Chinese calendar",
+        css=lantern.global_css,
     ),
     Theme(id="ramadan", name="Ramadan", description=COMING_SOON, windows=RAMADAN),
     Theme(
