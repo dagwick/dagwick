@@ -196,7 +196,7 @@ function Report({ report }: { report: ScoreReport }) {
         )}
       </section>
       <footer className="dagwick-foot dagwick-muted">
-        {report.points} / {report.max_points} points · scored automatically from the latest parsed version of this DAG · {BRAND} {VERSION}
+        {report.points} / {report.max_points} points · graded from this DAG's latest version and its recent runs · {BRAND} {VERSION}
       </footer>
     </>
   );

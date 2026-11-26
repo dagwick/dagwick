@@ -174,7 +174,7 @@ html.dark .dagwick {
 .dagwick-dispute { display: inline-block; margin-top: 6px; font-size: 12px; color: var(--dagwick-muted); text-decoration: underline; text-underline-offset: 2px; }
 .dagwick-dispute:hover, .dagwick-dispute:focus-visible { color: var(--dagwick-accent-text); }
 .dagwick-clear { padding: 28px; text-align: center; color: var(--dagwick-muted); }
-.dagwick-foot { font-size: 12px; margin-top: 12px; text-align: right; }
+.dagwick-foot { font-size: 12px; margin-top: 12px; text-align: center; text-wrap: balance; }
 .dagwick-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 16px; text-align: center; }
 .dagwick-empty h3 { margin: 8px 0 0; }
 
@@ -314,6 +314,14 @@ html.dark .dagwick {
 }
 .dagwick-dd > .dagwick-select { width: 100%; text-align: left; }
 .dagwick-dd-value { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dagwick-dd > .dagwick-select.is-set { background-image: none; }
+.dagwick-dd-clear {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: grid; place-items: center;
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; cursor: pointer;
+  color: var(--dagwick-muted); background: transparent;
+}
+.dagwick-dd-clear:hover { color: var(--dagwick-text); background: var(--dagwick-surface); }
+.dagwick-dd-clear:focus-visible { outline: 2px solid var(--dagwick-accent); outline-offset: 1px; color: var(--dagwick-text); }
 .dagwick-dd-list {
   position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; min-width: max(100%, 240px); max-height: 320px; overflow-y: auto;
   margin: 0; padding: 6px; list-style: none; color: var(--dagwick-text); background: var(--dagwick-bg); outline: none;
@@ -338,6 +346,7 @@ html.dark .dagwick {
 .dagwick-dd-sep { height: 1px; margin: 4px 6px; background: var(--dagwick-border); }
 @media (prefers-reduced-motion: reduce) { .dagwick-dd-list { animation: none; } }
 .dagwick-fleet-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.dagwick-fleet-grid > .dagwick-foot { grid-column: 1; margin-top: 0; }
 .dagwick-toolbar { display: flex; gap: 10px; align-items: center; padding: 10px; border-bottom: 1px solid var(--dagwick-border); background: var(--dagwick-surface); flex-wrap: wrap; }
 .dagwick-search-wrap { position: relative; flex: 0 0 260px; width: 260px; color: var(--dagwick-muted); }
 .dagwick-search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); pointer-events: none; }
