@@ -6,8 +6,22 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- **The config-only theme files** (`themes/`). The Christmas and Halloween
+  themes are built into Dagwick (the **Themes** tab), so the separate
+  `[api] theme` JSON files were a second copy to keep up to date.
+- **The validation kit** (`scripts/fleet_review.py`, `docs/validation.md`),
+  written for the real-deployment review in #33, which is done. For a
+  one-off report use **Download CSV** on the fleet page, or the fleet API in
+  [docs/dashboards.md](docs/dashboards.md).
+
 ### Added
 
+- **New Year no longer looks like Dagwick's birthday.** On its dates the
+  banner's Wick wears a black top hat with a gold band instead of a party hat,
+  a gold clock at midnight stands next to the candle, the sign is 🥂, and gold
+  stars and fireworks replace the confetti.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
   check id only (never the DAG id, file or code; the link sends no referrer).
@@ -133,6 +147,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **The owner and tag filters on the fleet page can be cleared with one
+  click:** while a filter is set, an × in the box resets it to "All owners" or
+  "All tags".
+- **The footer on the fleet page and the DAG tab** no longer says grades come
+  only from "the latest parsed version" of each DAG. Two checks (sensors and
+  late runs) also use recent runs, and the fleet footer now says that the
+  success rates it shows don't change the grade.
 - **Small hardening from a source security audit** (Cloudflare's
   security-audit skill):
   - **Ack reasons** are shown to everyone who can see a DAG's grade, so a
