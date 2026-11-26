@@ -106,8 +106,14 @@ function Fireworks() {
         { left: "64%", top: "32%", color: "#fbbf24", delay: 3.6 },
       ].map((f, i) => (
         <span key={i} className="dagwick-firework" style={{ left: f.left, top: f.top, animationDelay: sec(f.delay) }}>
-          {range(12).map((j) => (
-            <i key={j} style={{ background: f.color, transform: `rotate(${j * 30}deg) translateY(-26px)` }} />
+          {range(18).map((j) => (
+            <i
+              key={j}
+              style={{
+                background: `linear-gradient(to top, transparent, ${f.color} 70%, #fff8e1)`,
+                transform: `rotate(${j * 20}deg) translateY(-24px)`,
+              }}
+            />
           ))}
         </span>
       ))}

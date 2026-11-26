@@ -20,9 +20,26 @@ from dagwick.snow import url
 SEED = 1231
 BEHIND = "-1"  # below Airflow's page content, above the window's background
 
-# Soft, warm colours: gold first, a few cool accents.
-COLORS = ("#fcd34d", "#fbbf24", "#f9a8d4", "#a5b4fc", "#67e8f9")
 STAR = ("#fde68a", "#fef3c7", "#fcd34d")
+
+
+@dataclass(frozen=True)
+class Kind:
+    """One kind of firework: its colours, how many streaks, how much they bend down."""
+
+    name: str
+    mid: str  # colour along the streak
+    tip: str  # the bright end of the streak
+    glitter: str
+    rays: int
+    droop: float  # how far the streaks bend down, as a share of the radius
+
+
+KINDS = (
+    Kind("willow", "#f59e0b", "#fef3c7", "#fcd34d", 34, 0.32),  # gold, long and drooping
+    Kind("peony", "#e11d48", "#fecdd3", "#fda4af", 28, 0.12),  # crimson, round
+    Kind("chrysanthemum", "#60a5fa", "#f8fafc", "#e0f2fe", 30, 0.18),  # silver-blue
+)
 
 
 def _move(x: float, y: float, scale: float = 1.0) -> str:
@@ -41,61 +58,81 @@ class Burst:
     size: int  # px
     left: float  # vw, where the centre is
     top: float  # vh
-    outer: str
-    inner: str
-    rays: int
+    kind: Kind
+    seed: int
     seconds: float
     delay: float  # negative: the cycle has already started when the page opens
 
 
 def burst_svg(burst: Burst) -> str:
-    """One firework: thin rays of sparks fading towards the centre, and a soft glow."""
+    """One firework: curved streaks that brighten towards their tips, bending down as
+    if pulled by gravity, with a soft glow and glitter falling off the ends.
+
+    One radial gradient colours every streak by its distance from the centre: dark at
+    the centre, the firework's colour along the way, near white at the tip.
+    """
+    rng = random.Random(burst.seed)
+    kind = burst.kind
     r = burst.size / 2
-
-    def ring(count: int, inner: float, outer: float, color: str, turn: float) -> str:
-        sparks = []
-        for i in range(count):
-            a = math.tau * i / count + turn
-            for k, size, op in ((0, 1.0, 0.95), (1, 0.7, 0.6), (2, 0.5, 0.35), (3, 0.4, 0.2)):
-                at = outer - (outer - inner) * k / 4
-                x, y = math.cos(a) * at * r, math.sin(a) * at * r
-                dot = max(0.7, r * 0.016 * size)
-                sparks.append(
-                    f"<circle cx='{x:.1f}' cy='{y:.1f}' r='{dot:.1f}' fill='{color}' "
-                    f"opacity='{op}'/>"
-                )
-        return "".join(sparks)
-
+    streaks, glitter = [], []
+    for i in range(kind.rays):
+        a = math.tau * i / kind.rays + rng.uniform(-0.06, 0.06)
+        # Shorter when they droop, so the bent ends stay inside the drawing.
+        reach = r * rng.uniform(0.78, 0.92) / (1 + kind.droop * 1.1)
+        start = r * 0.1
+        dx, dy = math.cos(a), math.sin(a)
+        # Gravity: the far half of each streak bends down.
+        x1, y1 = dx * reach, dy * reach + kind.droop * r * (0.6 + 0.4 * abs(dx))
+        cx, cy = dx * reach * 0.62, dy * reach * 0.62 + kind.droop * r * 0.12
+        streaks.append(f"M{dx * start:.1f} {dy * start:.1f} Q{cx:.1f} {cy:.1f} {x1:.1f} {y1:.1f}")
+        for k in range(rng.randint(1, 3)):  # glitter drifting below the tip
+            gx = x1 + rng.uniform(-2, 2)
+            gy = y1 + 4 + k * rng.uniform(4, 7)
+            glitter.append(
+                f"<circle cx='{gx:.1f}' cy='{gy:.1f}' r='{rng.uniform(0.6, 1.2):.1f}' "
+                f"fill='{kind.glitter}' opacity='{0.75 - k * 0.2:.2f}'/>"
+            )
+    d = " ".join(streaks)
     return (
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{burst.size}' height='{burst.size}' "
         f"viewBox='{-r:.0f} {-r:.0f} {burst.size} {burst.size}'>"
-        "<defs><radialGradient id='g'>"
-        f"<stop offset='0' stop-color='{burst.outer}' stop-opacity='.35'/>"
-        f"<stop offset='1' stop-color='{burst.outer}' stop-opacity='0'/>"
-        "</radialGradient></defs>"
-        f"<circle r='{r * 0.45:.0f}' fill='url(#g)'/>"
-        f"{ring(burst.rays, 0.45, 0.95, burst.outer, 0)}"
-        f"{ring(burst.rays // 2, 0.2, 0.5, burst.inner, math.pi / burst.rays)}"
+        "<defs>"
+        f"<radialGradient id='s' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='{r:.0f}'>"
+        f"<stop offset='0' stop-color='{kind.mid}' stop-opacity='0'/>"
+        f"<stop offset='.35' stop-color='{kind.mid}' stop-opacity='.55'/>"
+        f"<stop offset='.8' stop-color='{kind.tip}' stop-opacity='.95'/>"
+        f"<stop offset='1' stop-color='{kind.tip}' stop-opacity='.2'/>"
+        "</radialGradient>"
+        "<filter id='b' x='-20%' y='-20%' width='140%' height='140%'>"
+        "<feGaussianBlur stdDeviation='2.6'/></filter>"
+        "<radialGradient id='c'>"
+        f"<stop offset='0' stop-color='{kind.tip}' stop-opacity='.9'/>"
+        f"<stop offset='.35' stop-color='{kind.mid}' stop-opacity='.45'/>"
+        f"<stop offset='1' stop-color='{kind.mid}' stop-opacity='0'/>"
+        "</radialGradient>"
+        "</defs>"
+        f"<circle r='{r * 0.12:.0f}' fill='url(#c)'/>"
+        f"<path d='{d}' fill='none' stroke='url(#s)' stroke-width='3.4' "
+        "stroke-linecap='round' filter='url(#b)' opacity='.7'/>"
+        f"<path d='{d}' fill='none' stroke='url(#s)' stroke-width='1.3' stroke-linecap='round'/>"
+        f"{''.join(glitter)}"
         "</svg>"
     )
 
 
 def bursts(rng: random.Random) -> list[Burst]:
-    """Four fireworks, spread over the window and clear of the sidebar."""
-    spots = [(20, 16), (44, 30), (67, 12), (86, 34)]
-    rng.shuffle(spots)
+    """Four fireworks spread over the window, clear of the sidebar; gold leads."""
+    spots = [(22, 18), (46, 30), (68, 14), (87, 32)]
+    kinds = [KINDS[0], KINDS[1], KINDS[0], KINDS[2]]
     out = []
-    for i, (left, top) in enumerate(spots):
-        outer = COLORS[i % 2]  # gold, every one
-        inner = rng.choice(COLORS[2:])
+    for i, ((left, top), kind) in enumerate(zip(spots, kinds, strict=True)):
         out.append(
             Burst(
-                size=rng.choice((220, 260, 300)),
+                size=rng.choice((280, 320, 360)),
                 left=left + rng.uniform(-3, 3),
                 top=top + rng.uniform(-4, 4),
-                outer=outer,
-                inner=inner,
-                rays=rng.choice((18, 20, 22)),
+                kind=kind,
+                seed=rng.randint(0, 10_000),
                 seconds=round(rng.uniform(9, 12), 1),
                 delay=-round(i * 2.6 + rng.uniform(0, 1), 1),
             )

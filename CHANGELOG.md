@@ -9,7 +9,9 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - **New Year theme** (31 December to 2 January): a calm midnight sky behind
-  Airflow. A few soft gold fireworks bloom and fade slowly, stars twinkle, and a
+  Airflow. Real-looking fireworks (a gold willow, a crimson peony, a silver-blue
+  chrysanthemum) bloom slowly, their streaks bending down and dropping
+  glitter; stars twinkle, and a
   warm glow rises from the bottom of the window. Everything is drawn behind the
   page, so it never covers text, buttons or menus. CSS only, moves on the
   graphics card, and stands still for viewers who prefer reduced motion. The

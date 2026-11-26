@@ -278,9 +278,9 @@ function HalloweenScene() {
 /** The New Year theme's picture: soft fireworks and stars in a midnight sky. */
 function NewYearScene() {
   const bursts: [number, number, number, string, string][] = [
-    [62, 40, 26, "#fcd34d", "#a5b4fc"],
-    [158, 34, 20, "#fbbf24", "#f9a8d4"],
-    [112, 66, 14, "#fcd34d", "#67e8f9"],
+    [62, 40, 26, "#f59e0b", "#fef3c7"],
+    [158, 34, 20, "#e11d48", "#fecdd3"],
+    [112, 66, 14, "#60a5fa", "#f8fafc"],
   ];
   const stars: [number, number, number][] = [
     [22, 18, 1.1],
@@ -295,18 +295,23 @@ function NewYearScene() {
     <svg className="dagwick-theme-scene" viewBox="0 0 220 110" role="img" aria-label="Soft gold fireworks in a midnight sky">
       <rect width="220" height="110" fill="#17133a" />
       <rect y="70" width="220" height="40" fill="#f59e0b" opacity=".12" />
-      {bursts.map(([x, y, r, outer, inner], b) => (
-        <g key={b} transform={`translate(${x} ${y})`}>
-          {Array.from({ length: 12 }, (_, i) => {
-            const a = (i / 12) * Math.PI * 2;
+      {bursts.map(([x, y, r, color, tip], b) => (
+        <g key={b} transform={`translate(${x} ${y})`} strokeLinecap="round">
+          <circle r={r * 0.16} fill={tip} opacity=".8" />
+          {Array.from({ length: 18 }, (_, i) => {
+            const a = (i / 18) * Math.PI * 2;
+            const droop = r * 0.22;
+            const ex = Math.cos(a) * r;
+            const ey = Math.sin(a) * r + droop * (0.6 + 0.4 * Math.abs(Math.cos(a)));
             return (
-              <g key={i}>
-                <circle cx={Math.cos(a) * r} cy={Math.sin(a) * r} r={1.6} fill={outer} />
-                <circle cx={Math.cos(a) * r * 0.7} cy={Math.sin(a) * r * 0.7} r={1.1} fill={outer} opacity=".6" />
-                {i % 2 === 0 && (
-                  <circle cx={Math.cos(a + 0.26) * r * 0.42} cy={Math.sin(a + 0.26) * r * 0.42} r={1.1} fill={inner} />
-                )}
-              </g>
+              <path
+                key={i}
+                d={`M${Math.cos(a) * r * 0.15} ${Math.sin(a) * r * 0.15} Q${Math.cos(a) * r * 0.6} ${Math.sin(a) * r * 0.6} ${ex} ${ey}`}
+                fill="none"
+                stroke={i % 3 === 0 ? tip : color}
+                strokeWidth="1"
+                opacity=".9"
+              />
             );
           })}
         </g>
