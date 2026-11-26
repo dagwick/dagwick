@@ -6,15 +6,125 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+
+- **The config-only theme files** (`themes/`). The Christmas and Halloween
+  themes are built into Dagwick (the **Themes** tab), so the separate
+  `[api] theme` JSON files were a second copy to keep up to date.
+- **The validation kit** (`scripts/fleet_review.py`, `docs/validation.md`),
+  written for the real-deployment review in #33, which is done. For a
+  one-off report use **Download CSV** on the fleet page, or the fleet API in
+  [docs/dashboards.md](docs/dashboards.md).
+
 ### Added
 
+- **New Year no longer looks like Dagwick's birthday.** On its dates the
+  banner's Wick wears a black top hat with a gold band instead of a party hat,
+  a gold clock at midnight stands next to the candle, the sign is 🥂, and gold
+  stars and fireworks replace the confetti.
 - **Dispute a check.** A failing or warning built-in check in the Dagwick tab
   now links to a "Dispute a check" GitHub issue form, pre-filled with the
   check id only (never the DAG id, file or code; the link sends no referrer).
   `dagwick check` prints the same link to stderr when a check is flagged; JSON
   output is unchanged. Checks from check packs get no link.
+  The form replaces the "False alarm" form: pick "False alarm" in it instead.
+- **Every check explains itself** (#107). Each built-in check now says why it
+  matters, with bad and good code, how to fix it and when it's fine to
+  acknowledge it:
+  - `dagwick explain` lists every check, and `dagwick explain <check>`
+    explains one. It works without Airflow installed.
+  - The new "Check reference" in `docs/checks.md` has the same text. It is
+    generated from the checks, so the docs and the CLI can't disagree.
+  - In the Dagwick tab, a check that needs work shows **Why it matters** above
+    **How to fix**, and links to its section of the reference.
+  - `/api/checks` and score reports include `why`.
+  - Check packs can explain their checks too, with the new optional `why`,
+    `bad` and `ack_when` parameters of `@check`.
+- **`dagwick fix`** (#105) repairs DAG files automatically. It shows a diff
+  (and exits 1 if there is something to fix); `--write` changes the files.
+  - Safe fix: deprecated Airflow imports move to the path Airflow points to.
+    An import that mixes moved and current names is split.
+  - Unsafe fix, only with `--unsafe-fixes`: missing retries get
+    `"retries": 2` in `default_args`. It is left out when the file already
+    sets retries anywhere, even `retries=0`.
+  - It never imports or runs the files, keeps formatting, comments and line
+    endings, skips checks the file acknowledges, and is idempotent. A new fuzz
+    target checks that a fix always leaves valid Python.
+  - `dagwick check` marks fixable problems with `[dagwick fix]`.
+- **`dagwick-fix` pre-commit hook.** It applies the safe fixes to changed DAG
+  files; pre-commit then stops the commit so you can review them.
+- New check, **Fixed start_date** (`dynamic_start_date`, #108): fails when a
+  `start_date` reads the clock (`datetime.now()`, `pendulum.today()`,
+  `timezone.utcnow()`, a `days_ago()` helper, ...), so it moves forward every
+  time the file is parsed: runs may never become due, and in Airflow 3 each new
+  value makes a new DAG version. The serialized DAG only keeps the timestamp,
+  so the check reads the DAG file: `start_date` on the DAG, `@dag`, a task or
+  in `default_args` (inline, through a variable, `dict()`, `{**base}`,
+  `default_args["start_date"] = ...`), directly or through variables, also
+  inside DAG factories. Code inside tasks runs when the task runs and is left
+  alone. Each finding names the line. Reliability, 10 points; it can be
+  acknowledged. Compared with Ruff's `AIR304` in `docs/linting.md`.
+- **Lint and fix your DAGs** (`docs/linting.md`, #113): install, check, fix,
+  explain, acknowledging checks, exit codes, pre-commit, a GitHub Actions
+  workflow, adopting Dagwick in an existing repository, and how it fits next
+  to Ruff's Airflow rules. A test checks every `dagwick` command and hook the
+  docs show.
+- New check, **Tasks are connected** (`isolated_tasks`, #111): warns when a
+  task has no upstream and no downstream task while most of the DAG's tasks
+  are connected. That is usually a forgotten `>>`: the task runs as soon as
+  the DAG run begins, in parallel with everything else. The affected tasks are
+  listed. DAGs whose tasks are all or mostly independent on purpose (a batch
+  of separate jobs) are skipped. It reads the serialized DAG, so dependencies
+  set through task groups, `chain()` or a task's input, including mapped
+  tasks, count. Structure, 3 points; it can be acknowledged.
+- New check, **Safe use of depends_on_past** (`depends_on_past`, #109). Tried
+  on a real Airflow 3 scheduler: after one failure, the later runs of a task
+  with `depends_on_past` stay "running" with no error, because Airflow's
+  deadlock check skips them. The check fails when `depends_on_past` meets
+  `catchup=True` and more than one active run (every missed interval is stuck
+  at once), and warns when `default_args` sets it for every task. With
+  `max_active_runs=1` a failure holds up one run, which is how
+  `depends_on_past` is meant to work. Read per task from the serialized DAG
+  (`wait_for_downstream` counts too); the line comes from the DAG file. DAGs
+  without it are skipped. Reliability, 8 points; it can be acknowledged.
+- New check, **Someone hears about late runs** (`deadline_alerts`, #110).
+  Airflow 3 replaced SLAs with deadline alerts (Airflow 3.1 and later). The
+  check warns when a DAG has none, and its recent runs usually take an hour
+  or more, or its `dagrun_timeout` is over two hours: a run that is late but
+  hasn't failed tells nobody. It passes when a deadline alert is set, and is
+  skipped for short runs, when there is nothing to judge, and on an Airflow
+  without deadline alerts. The run times come from the same run history as
+  run health (the median of the last 20 successful runs in 30 days), read in
+  one query for the fleet page; `dagwick check` has no run history, so it
+  only judges `dagrun_timeout`. Checked how deadline alerts serialize on
+  Airflow 3.1, 3.2, 3.3 and 3.4. Reliability, 5 points; it can be
+  acknowledged with a reason that says how late runs are noticed instead.
+
+- **Try it in one command.** `docker compose -f demo/compose.yaml up` starts a
+  local Airflow 3 sandbox with the latest Dagwick release and the demo DAGs, on
+  <http://localhost:8080> only.
 
 ### Changed
+
+- **Tested on Airflow 3.3 and 3.4** (#112). CI now runs the test suite on
+  Airflow 3.1.8, 3.2.2, 3.3.2 and 3.4.0, and the development environment and
+  `./dev/run.sh` use Airflow 3.4.0. No code changes were needed. On Airflow
+  3.4 the Dagwick tab opens in the DAG page's side panel, like Airflow's own
+  tabs.
+- **Dagwick presents itself as a DAG linter.** The README and the PyPI
+  summary now lead with linting and fixing DAG files; the Airflow UI is the
+  other half. The pre-commit example uses `rev: v0.3.0`.
+- **Email alerts count.** "Someone hears about failures" (`failure_alerts`)
+  now also passes for tasks with an `email` and `email_on_failure`, and
+  "Retries are visible" (`retry_alerts`) for an `email` with `email_on_retry`.
+  The pass message says whether it found a callback or an email.
+- **The README says up front that every check can be retuned:** weights,
+  disabled checks and acknowledgements, plus defaults from shared
+  `default_args` or `airflow.cfg`.
+
+- **The repository moved to the `dagwick` organization:**
+  <https://github.com/dagwick/dagwick>. Old links redirect. Releases up to
+  0.3.x still verify against `ardalan-jalal/dagwick`, where they were signed.
 
 - **Dagwick checks the same DAG permissions as Airflow.** Each endpoint now
   also requires the DAG sub-permissions core Airflow asks for before showing
@@ -37,6 +147,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **The owner and tag filters on the fleet page can be cleared with one
+  click:** while a filter is set, an × in the box resets it to "All owners" or
+  "All tags".
+- **The footer on the fleet page and the DAG tab** no longer says grades come
+  only from "the latest parsed version" of each DAG. Two checks (sensors and
+  late runs) also use recent runs, and the fleet footer now says that the
+  success rates it shows don't change the grade.
 - **Small hardening from a source security audit** (Cloudflare's
   security-audit skill):
   - **Ack reasons** are shown to everyone who can see a DAG's grade, so a
@@ -51,6 +168,22 @@ All notable changes to this project are documented here. The format follows
   - **`scripts/fleet_review.py`** no longer resends the token when the server
     redirects, and refuses to send it over plain `http://` except to this
     machine.
+- **Fixes for the rest of that audit:**
+  - **Secret scan:** the connection-URI pattern took quadratic time on long
+    strings like `a.a.a.…`, so a DAG file could stall the api-server while it
+    scored. The pattern now has a fixed start and length caps. It also finds
+    URIs whose scheme follows an underscore, such as `my_postgresql://`.
+  - **The fleet page** now builds each DAG's cache key from its hash, read
+    without its data, and loads and deserializes a DAG only when its score is
+    not cached. Before, every request loaded up to 2,000 DAGs even with a
+    warm cache.
+  - **Check packs** load under a lock. A request that arrived while packs were
+    importing could score with only part of the checks and cache that score.
+  - **Releases** run in a protected `pypi` GitHub environment and refuse a tag
+    whose commit is not on `main`. **Maintainers:** before the next release,
+    create the environment and re-add the PyPI trusted publisher with
+    environment `pypi` (see `RELEASING.md`), or the upload fails with
+    `invalid-publisher`.
 
 ## [0.3.0] - 2026-11-10
 

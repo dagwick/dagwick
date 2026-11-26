@@ -5,7 +5,7 @@
 Please **do not open a public issue** for security problems. Report them
 privately with GitHub's form:
 
-**<https://github.com/ardalan-jalal/dagwick/security/advisories/new>**
+**<https://github.com/dagwick/dagwick/security/advisories/new>**
 
 (It is also on this repository's **Security** tab, under **Report a
 vulnerability**.) Only the maintainers can see the report.
@@ -21,7 +21,7 @@ What happens next:
 - The fix is announced in a **GitHub Security Advisory**, with a CVE when one
   applies, and in the release notes. We credit you unless you prefer not.
 
-Published advisories: <https://github.com/ardalan-jalal/dagwick/security/advisories>
+Published advisories: <https://github.com/dagwick/dagwick/security/advisories>
 
 ## Supported versions
 
@@ -49,8 +49,13 @@ surface beyond what Airflow already exposes:
   from user input.
 - **No third-party code in the browser.** The UI bundle uses the React that
   Airflow already provides. It loads nothing from a CDN, uses no
-  `innerHTML`, and stores nothing in `localStorage`.
+  `innerHTML`. The only thing it keeps in `localStorage` is one per-viewer,
+  non-sensitive switch: whether seasonal moods are hidden.
 - **No runtime dependencies.** The package declares no dependencies of its own.
 - **Signed releases.** Releases are published from GitHub Actions with PyPI
   Trusted Publishing (no stored token), with a build provenance attestation
   and Sigstore signatures. See "Verify a release" in `RELEASING.md`.
+
+The threat model, trust boundaries and the reasoning behind this design are in
+the [security assurance case](docs/assurance-case.md); how the parts fit
+together is in [docs/architecture.md](docs/architecture.md).

@@ -1,13 +1,13 @@
 [project]
 name = "dagwick"
 dynamic = ["version"]
-description = "The wick that keeps your DAGs lit: DAG quality scores, a fleet view, and fixes you can act on, inside the Airflow 3 UI."
+description = "Lint and fix Airflow DAGs: checks for reliable, readable DAGs, automatic fixes, and A–F grades inside the Airflow 3 UI."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "The Dagwick Authors" }]
-keywords = ["airflow", "apache-airflow", "airflow-plugin", "dag", "data-quality", "linting"]
+keywords = ["airflow", "apache-airflow", "airflow-plugin", "dag", "linter", "lint", "linting", "data-quality", "pre-commit"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Plugins",
@@ -32,10 +32,10 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/ardalan-jalal/dagwick"
-Repository = "https://github.com/ardalan-jalal/dagwick"
-Issues = "https://github.com/ardalan-jalal/dagwick/issues"
-Changelog = "https://github.com/ardalan-jalal/dagwick/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/dagwick/dagwick"
+Repository = "https://github.com/dagwick/dagwick"
+Issues = "https://github.com/dagwick/dagwick/issues"
+Changelog = "https://github.com/dagwick/dagwick/blob/main/CHANGELOG.md"
 
 [project.scripts]
 dagwick = "dagwick.cli:main"
@@ -46,7 +46,7 @@ dagwick = "dagwick.plugin:DagwickPlugin"
 # Development only (never published as a dependency): tests and the local sandbox.
 [dependency-groups]
 dev = [
-  "apache-airflow==3.3.2",
+  "apache-airflow==3.4.0",
   "pytest>=8",
   "pytest-cov>=6",
   "ruff>=0.14",

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import inspect
 import logging
+import threading
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -78,6 +79,7 @@ class Context:
     sensor_tasks: tuple[str, ...] | None = None
     sensor_runs: dict[str, tuple[float | None, bool]] | None = None
     default_deferrable: bool = False
+    typical_run_seconds: float | None = None  # median of the DAG's recent successful runs
 
 
 @dataclass(frozen=True)
@@ -93,6 +95,10 @@ class CheckSpec:
     acknowledgeable: bool = False
     ack_hint: str = ""
     pack: str = BUILTIN_PACK  # the distribution that registered the check
+    why: str = ""  # the failure the check prevents (dagwick explain, docs, DAG tab)
+    bad: str = ""  # code that breaks the check; ``example`` shows the fix
+    ack_when: str = ""  # when breaking the check on purpose is fine
+    code: str = ""  # the rule code, e.g. DW101; a check pack's check uses its id
 
 
 @dataclass(frozen=True)
@@ -110,10 +116,13 @@ class CheckResult:
     ack_reason: str = ""  # why the DAG breaks this check on purpose (status "ack")
     ack_note: str = ""  # why a "# dagwick: ack" comment for this check was ignored
     pack: str = BUILTIN_PACK  # the distribution that registered the check
+    why: str = ""  # why the check matters; set only when the check needs work
+    code: str = ""  # the rule code, e.g. DW101
 
 
 _REGISTRY: dict[str, CheckSpec] = {}
 _plugins_loaded = False
+_plugins_lock = threading.RLock()  # one thread imports the packs; the others wait
 _loading_pack: str | None = None  # set while an entry point is being imported
 
 
@@ -135,6 +144,10 @@ def check(
     example: str = "",
     acknowledgeable: bool = False,
     ack_hint: str = "",
+    why: str = "",
+    bad: str = "",
+    ack_when: str = "",
+    code: str = "",
 ) -> Callable[[Callable[[Any], Finding]], Callable[[Any], Finding]]:
     """Register a DAG check.
 
@@ -144,6 +157,11 @@ def check(
     ``# dagwick: ack <id> -- <reason>`` comment; only allow it where there is a
     legitimate reason to break the check. ``ack_hint`` says what the reason must
     explain (for example where failures are alerted instead).
+    ``why`` explains the failure the check prevents, ``bad`` is code that breaks
+    it, and ``ack_when`` says when breaking it on purpose is fine. They are shown
+    by ``dagwick explain``, in the docs and in the DAG tab; all three are optional.
+    ``code`` is the short rule code ``dagwick check`` prints, selects and ignores (for
+    example ``DW101``); it defaults to the check's ``id``.
     A check function takes the DAG, and optionally a :class:`Context` as a
     second parameter.
     Re-registering the same ``id`` replaces the previous check, which lets a
@@ -166,6 +184,10 @@ def check(
             acknowledgeable or bool(ack_hint),
             ack_hint,
             _pack_for(func.__module__),
+            why,
+            bad,
+            ack_when,
+            code or id,
         )
         return func
 
@@ -180,16 +202,23 @@ def load_plugin_checks() -> None:
     global _plugins_loaded, _loading_pack
     if _plugins_loaded:
         return
-    _plugins_loaded = True
-    for ep in entry_points(group=ENTRY_POINT_GROUP):
-        dist = getattr(ep, "dist", None)
-        _loading_pack = getattr(dist, "name", None) or ep.name
+    # Without the lock, a second request arriving while the packs import would see
+    # "loaded", score with only part of the checks, and cache that score.
+    with _plugins_lock:
+        if _plugins_loaded or _loading_pack is not None:
+            return  # loaded meanwhile, or a pack's import called back into us
         try:
-            ep.load()
-        except Exception:
-            log.exception("Failed to load dagwick checks from entry point %s", ep.name)
+            for ep in entry_points(group=ENTRY_POINT_GROUP):
+                dist = getattr(ep, "dist", None)
+                _loading_pack = getattr(dist, "name", None) or ep.name
+                try:
+                    ep.load()
+                except Exception:
+                    log.exception("Failed to load dagwick checks from entry point %s", ep.name)
+                finally:
+                    _loading_pack = None
         finally:
-            _loading_pack = None
+            _plugins_loaded = True
 
 
 def registered_checks() -> list[CheckSpec]:
@@ -295,6 +324,8 @@ def score_dag(
                 ack_reason=ack_reason,
                 ack_note=ack_note,
                 pack=spec.pack,
+                why=spec.why if needs_work else "",
+                code=spec.code,
             )
         )
 

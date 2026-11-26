@@ -1,0 +1,26 @@
+# Try Dagwick in one command:
+#
+#   docker compose -f demo/compose.yaml up
+#
+# then open http://localhost:8080 and click "Dagwick" in the menu.
+# Grade the same DAGs from the command line:
+#
+#   docker compose -f demo/compose.yaml run --rm airflow bash -c "dagwick check /opt/airflow/dags"
+#
+# A throwaway sandbox: no login, data is lost when the container is removed.
+# Never use these settings for a real deployment.
+name: dagwick-demo
+
+services:
+  airflow:
+    build: .
+    command: standalone
+    ports:
+      # Only this machine can reach it: with no login, everyone who can is an admin.
+      - "127.0.0.1:8080:8080"
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "True"
+      AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "10"
+    volumes:
+      - ../dev/dags:/opt/airflow/dags:ro

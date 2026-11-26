@@ -1,0 +1,79 @@
+name: Close linked issues on dev
+
+# GitHub only honours "Fixes #N" when a PR merges into the default branch
+# (main). Day-to-day PRs merge into dev, so this closes the issues they name
+# as soon as the fix lands there.
+#
+# It runs on push to dev rather than on pull_request_target, because
+# pull_request_target always reads the workflow file from main, so a copy that
+# lives only on dev never runs. A push event uses dev's own copy, and it gets a
+# token that can close issues even when the merged PR came from a fork.
+#
+# Commit messages and PR text are untrusted: they are read from the event file
+# and the API with jq, never interpolated into the script.
+on:
+  push:
+    branches: [dev]
+
+permissions: {}
+
+concurrency:
+  group: close-issues-on-dev
+  cancel-in-progress: false
+
+jobs:
+  close:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: read
+      contents: read
+    steps:
+      - name: Close issues named with a closing keyword
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # Messages of the commits this push added to dev.
+          text="$(jq -r '[.commits[]?.message] | join("\n")' "$GITHUB_EVENT_PATH")"
+
+          # The PR(s) merged into dev by this push: their description and all
+          # their commits (the push payload lists at most 20 commits).
+          prs="$(gh api "repos/$GH_REPO/commits/$SHA/pulls" \
+            --jq '.[] | select(.base.ref == "dev" and .merged_at != null) | .number')" \
+            || { echo "::warning::Could not look up the PR for $SHA; using commit messages only."; prs=""; }
+          for pr in $prs; do
+            text+=$'\n'"$(gh pr view "$pr" --json body,commits \
+              --jq '[.body // "", (.commits[] | .messageHeadline + "\n" + .messageBody)] | join("\n")')"
+          done
+
+          if [ -n "$prs" ]; then
+            by="$(printf '#%s, ' $prs)"; by="${by%, }"
+          else
+            by="${SHA:0:7}"
+          fi
+
+          # Same keywords GitHub accepts: close/closes/closed, fix/fixes/fixed,
+          # resolve/resolves/resolved, optionally followed by a colon.
+          issues="$(printf '%s\n' "$text" \
+            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?):?[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+$' | sort -un || true)"
+
+          if [ -z "$issues" ]; then
+            echo "No closing keywords found (from ${by})."
+            exit 0
+          fi
+
+          for n in $issues; do
+            info="$(gh api "repos/$GH_REPO/issues/$n" --jq '[.state, (.pull_request != null)] | @tsv' 2>/dev/null)" \
+              || { echo "#$n: not found, skipping"; continue; }
+            state="${info%%$'\t'*}"; is_pr="${info##*$'\t'}"
+            if [ "$is_pr" = "true" ]; then echo "#$n: is a PR, skipping"; continue; fi
+            if [ "$state" != "open" ]; then echo "#$n: already $state"; continue; fi
+            gh issue close "$n" --reason completed --comment "Closed by ${by}, merged into \`dev\`."
+            echo "#$n: closed"
+          done

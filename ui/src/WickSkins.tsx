@@ -170,9 +170,19 @@ function NewYearCandle({ paint }: SkinProps) {
       <Star x={86.5} y={133.5} r={3.2} fill="#fde047" />
       <Star x={87} y={121.5} r={2.2} fill="#fef9c3" />
       <circle cx="72" cy="136" r="1.2" fill="#fef9c3" />
-      {/* streamers */}
-      <path d="M43 136 q-6 -7 0 -12 q6 -5 0 -11" fill="none" stroke="#f472b6" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M118 135 q6 -6 1 -11 q-5 -5 2 -10" fill="none" stroke="#60a5fa" strokeWidth="2.4" strokeLinecap="round" />
+      {/* a gold clock at midnight */}
+      <circle cx="44" cy="128" r="8.6" fill="#1e1b4b" stroke="#f59e0b" strokeWidth="2" />
+      <path
+        d="M44 120.9 v1.6 M51.1 128 h-1.6 M44 135.1 v-1.6 M36.9 128 h1.6"
+        stroke="#fcd34d"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+      <path d="M44 128 V121.8 M44 128 V123.6" stroke="#fef3c7" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="44" cy="128" r="1.3" fill="#f59e0b" />
+      {/* gold sparkles */}
+      <Star x={117} y={124} r={3.4} fill="#fcd34d" />
+      <Star x={124} y={133} r={2.4} fill="#fde68a" />
       {wick(105, 114)}
     </g>
   );
@@ -629,6 +639,19 @@ function Flower({ x, y, petal, centre, r = 3 }: { x: number; y: number; petal: s
   );
 }
 
+/** New Year's Eve: a black top hat with a gold band, worn at a slight tilt. */
+function TopHat() {
+  return (
+    <g transform="rotate(-8)">
+      <path d="M-11 0 L-12.4 -27 Q0 -29.6 12.4 -27 L11 0Z" fill="#111827" />
+      <ellipse cx="0" cy="-27.2" rx="12.4" ry="2.5" fill="#1f2937" />
+      <path d="M-11.4 -8.6 L11.4 -8.6 L11.3 -3.4 L-11.3 -3.4Z" fill="#f59e0b" />
+      <path d="M-7.6 -24 V-11.6" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" />
+      <ellipse cx="0" cy="0.6" rx="19" ry="4.2" fill="#0b0f19" />
+    </g>
+  );
+}
+
 function PartyHat({ cone, pom }: { cone: string; pom: string }) {
   return (
     <>
@@ -668,7 +691,7 @@ export function Costume({ season, mood, part }: { season?: SeasonId; mood: Mood;
           </>
         );
       case "new-year":
-        return <PartyHat cone="#7c3aed" pom="#f472b6" />;
+        return <TopHat />;
       case "birthday":
         return <PartyHat cone="#ec4899" pom="#60a5fa" />;
       case "halloween":

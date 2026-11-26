@@ -9,6 +9,13 @@ DEFAULT_OWNERS = {"", "airflow"}
 
 @check(
     id="owner",
+    code="DW301",
+    why=(
+        "When a DAG breaks, the first question is who to call. The default owner, "
+        "'airflow', means nobody. The owner is shown in Airflow's DAG list and on "
+        "Dagwick's fleet page, and both can be filtered by it."
+    ),
+    bad="DAG(\"daily_sales\")  # owner defaults to 'airflow'",
     title="Has a real owner",
     category=Category.OWNERSHIP,
     weight=8,
@@ -24,6 +31,13 @@ def owner(dag: Any) -> Finding:
 
 @check(
     id="tags",
+    code="DW303",
+    why=(
+        "Tags are how people filter hundreds of DAGs in Airflow's DAG list and on "
+        "Dagwick's fleet page. A DAG without tags is hard to find, and is left out of "
+        "every filtered view."
+    ),
+    bad='DAG("daily_sales")  # no tags',
     title="Tagged",
     category=Category.OWNERSHIP,
     weight=5,
@@ -39,6 +53,13 @@ def tags(dag: Any) -> Finding:
 
 @check(
     id="docs",
+    code="DW302",
+    why=(
+        "doc_md is shown on the DAG's page in Airflow. Whoever is on call needs to know "
+        "what the DAG loads, from where, what depends on it and who owns it, without "
+        "reading the code."
+    ),
+    bad='DAG("daily_sales")  # no doc_md',
     title="Documented",
     category=Category.OWNERSHIP,
     weight=8,

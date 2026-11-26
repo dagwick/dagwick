@@ -10,6 +10,18 @@ updates:
     target-branch: dev
     schedule:
       interval: weekly
+    groups:
+      # Packages that must move together; separate PRs fail npm ci or the tests.
+      vite:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
   - package-ecosystem: github-actions
     directory: /
     target-branch: dev
@@ -17,6 +29,11 @@ updates:
       interval: weekly
   - package-ecosystem: docker
     directory: /.clusterfuzzlite
+    target-branch: dev
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /demo
     target-branch: dev
     schedule:
       interval: weekly

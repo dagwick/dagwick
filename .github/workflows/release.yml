@@ -10,6 +10,12 @@ jobs:
   pypi:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # PyPI trusts only this environment (see RELEASING.md). Its protection rules
+    # (required reviewers, tags vX.Y.Z only) mean one write-access account cannot
+    # publish an arbitrary commit on its own.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/dagwick/
     # Job permissions replace the defaults, so checkout needs contents: read again.
     permissions:
       contents: read
@@ -19,7 +25,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+          fetch-depth: 0 # the next step needs main's history
+      - name: The release commit is on main
+        # main only takes reviewed pull requests, so this ties the upload to reviewed code.
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD || {
+            echo "$GITHUB_REF_NAME ($GITHUB_SHA) is not on main. Release only from main."
+            exit 1
+          }
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - name: The release tag matches the package version
         run: |
           version=$(grep -Po '(?<=__version__ = ")[^"]+' src/dagwick/__init__.py)
@@ -38,7 +53,7 @@ jobs:
           sys.exit(f"Unknown classifiers: {bad}" if bad else 0)'
       - run: uv build
       # Provenance: a signed statement that this workflow built these files from
-      # this commit. Verify with: gh attestation verify <file> -R ardalan-jalal/dagwick
+      # this commit. Verify with: gh attestation verify <file> -R dagwick/dagwick
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         id: provenance
         with:
@@ -49,7 +64,7 @@ jobs:
         run: mkdir release-assets && cp dist/* release-assets/
       # The provenance also goes on the GitHub release as a file, where OpenSSF
       # Scorecard (Signed-Releases) looks for it: *.intoto.jsonl.
-      # Verify with: gh attestation verify <file> -R ardalan-jalal/dagwick --bundle <this file>
+      # Verify with: gh attestation verify <file> -R dagwick/dagwick --bundle <this file>
       - name: Add the provenance to the release files
         env:
           BUNDLE: ${{ steps.provenance.outputs.bundle-path }}

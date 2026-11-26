@@ -1,10 +1,33 @@
 # Dagwick
 
-[![PyPI](https://img.shields.io/pypi/v/dagwick?color=a99aff)](https://pypi.org/project/dagwick/) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white) [![CI](https://github.com/ardalan-jalal/dagwick/actions/workflows/ci.yml/badge.svg)](https://github.com/ardalan-jalal/dagwick/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-2f9e6e)](https://github.com/ardalan-jalal/dagwick/blob/main/LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/ardalan-jalal/dagwick/badge)](https://scorecard.dev/viewer/?uri=github.com/ardalan-jalal/dagwick) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16521/badge)](https://www.bestpractices.dev/projects/16521)
+[![PyPI](https://img.shields.io/pypi/v/dagwick?color=a99aff)](https://pypi.org/project/dagwick/) ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white) [![CI](https://github.com/dagwick/dagwick/actions/workflows/ci.yml/badge.svg)](https://github.com/dagwick/dagwick/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-2f9e6e)](https://github.com/dagwick/dagwick/blob/main/LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/dagwick/dagwick/badge)](https://scorecard.dev/viewer/?uri=github.com/dagwick/dagwick) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16521/badge)](https://www.bestpractices.dev/projects/16521)
 
-![Dagwick: grade your Airflow DAGs from A to F, right inside the Airflow UI](https://raw.githubusercontent.com/ardalan-jalal/dagwick/main/docs/banner.png)
+**Lint and fix your Airflow DAGs.** Dagwick checks DAGs for reliability and
+readability (retries, timeouts, alerts, owners, docs, slow parsing, secrets in
+code, deprecated imports, ...), fixes what it safely can, and explains every
+check. Run it on your DAG files in CI, and see the grades inside Airflow.
 
-![Dagwick in 15 seconds: a DAG's Dagwick tab with its score, run health and score history, then the fleet page filtered by a common issue](https://raw.githubusercontent.com/ardalan-jalal/dagwick/main/docs/demo.gif)
+```bash
+pip install dagwick
+dagwick check dags/ --min-grade C   # grade every DAG from A to F
+dagwick fix dags/ --write           # fix what can be fixed safely
+```
+
+![Dagwick: grade your Airflow DAGs from A to F, right inside the Airflow UI](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/banner.png)
+
+![Dagwick in 15 seconds: a DAG's Dagwick tab with its score, run health and score history, then the fleet page filtered by a common issue](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/demo.gif)
+
+## Try it in one command
+
+Needs Docker. This starts a throwaway Airflow 3 with Dagwick and a few demo DAGs:
+
+```bash
+git clone https://github.com/dagwick/dagwick && docker compose -f dagwick/demo/compose.yaml up
+```
+
+Open <http://localhost:8080> and click **Dagwick** in the sidebar. No login:
+the sandbox is reachable only from your machine. Stop it with `Ctrl+C`. See
+[`demo/`](demo/) for grading the demo DAGs from the command line instead.
 
 ## Setup
 
@@ -23,19 +46,38 @@ Using Docker? Add `dagwick` to your Airflow image's `requirements.txt`.
 - a **Dagwick** tab on every DAG page, and
 - a **Dagwick** page in the sidebar that grades all your DAGs.
 
-That's it. There is nothing to configure. If you want to, you can turn checks
-off, change their weights or move the grade thresholds in `airflow.cfg`
-([tune the scoring](https://github.com/ardalan-jalal/dagwick/blob/main/docs/checks.md#tune-the-scoring)).
+That's it. There is nothing to configure.
+
+## Your team, your rules
+
+The checks are defaults, not laws. What a good DAG looks like depends on your
+team, so every check can be retuned:
+
+- **Change how much a check counts:** `weights` under `[dagwick]` in
+  `airflow.cfg`, e.g. `weights = retries:20, tags:2`.
+- **Turn a check off for the whole deployment:** `disabled_checks`, e.g.
+  `disabled_checks = file_name, naming`.
+- **Accept a check for one DAG, with a reason:**
+  `# dagwick: ack <check> -- <reason>` in the DAG file.
+
+See [tune the scoring](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#tune-the-scoring)
+and [acknowledge a check on purpose](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#acknowledge-a-check-on-purpose).
+
+Defaults you already set elsewhere count too. Dagwick reads the DAG as Airflow
+loaded it, so `default_args` from a shared module and `airflow.cfg` defaults
+such as `default_task_retries` and `default_task_execution_timeout` are seen
+like values written in the DAG file.
 
 ## What you get
 
-- **A score and a grade for every DAG.** 20 checks in 7 categories:
+- **A score and a grade for every DAG.** 24 checks in 7 categories:
   reliability, observability, ownership, scheduling, structure, performance
   and security. Each check that doesn't pass tells you how to fix it. See
-  [what it checks](https://github.com/ardalan-jalal/dagwick/blob/main/docs/checks.md).
+  [what it checks](https://github.com/dagwick/dagwick/blob/main/docs/checks.md).
 - **Checks that read your DAG file without running it:** `Variable.get` at
   parse time, deprecated Airflow imports, hard-coded secrets (the value is
-  never shown), and sensors that hold a worker slot while they wait.
+  never shown), a `start_date` that moves on every parse, and sensors that
+  hold a worker slot while they wait.
 - **Run health** next to the score: success rate, retries, typical run time
   and its trend over the last 30 days. It never changes the score.
 - **Score history:** the score of each of the last 20 versions of a DAG, and
@@ -45,21 +87,21 @@ off, change their weights or move the grade thresholds in `airflow.cfg`
   score, grade, failing and warning checks, runs and success rate over 30
   days). The file is built in your browser from what you are allowed to see.
   To put the same data in a dashboard, see
-  [Fleet data in a dashboard](https://github.com/ardalan-jalal/dagwick/blob/main/docs/dashboards.md).
-- **`dagwick check` and a pre-commit hook** to grade DAG files before they are
-  merged. See [Check DAGs before they are merged](#check-dags-before-they-are-merged).
+  [Fleet data in a dashboard](https://github.com/dagwick/dagwick/blob/main/docs/dashboards.md).
+- **`dagwick check`, `dagwick fix` and pre-commit hooks** to lint and fix DAG
+  files before they are merged. See [Lint and fix DAG files](#lint-and-fix-dag-files).
 - **Break a check on purpose, with a reason.** Some DAGs need `catchup=True`
   or no retries. See [Acknowledge a check on purpose](#acknowledge-a-check-on-purpose).
 - **Your own rules as a check pack:** a separate package that adds checks
   through an entry point. See
-  [Write a check pack](https://github.com/ardalan-jalal/dagwick/blob/main/docs/checks.md#write-a-check-pack).
+  [Write a check pack](https://github.com/dagwick/dagwick/blob/main/docs/checks.md#write-a-check-pack).
 
 Wick, the little flame, dresses up for holidays like Newroz, Eid, Çarşema Sor,
-Diwali, Christmas and Halloween ([seasonal moods](https://github.com/ardalan-jalal/dagwick/blob/main/docs/moods.md)).
+Diwali, Christmas and Halloween ([seasonal moods](https://github.com/dagwick/dagwick/blob/main/docs/moods.md)).
 
-![The Dagwick tab on a DAG](https://raw.githubusercontent.com/ardalan-jalal/dagwick/main/docs/screenshots/dag-tab.png)
+![The Dagwick tab on a DAG](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/screenshots/dag-tab.png)
 
-![The Dagwick fleet page](https://raw.githubusercontent.com/ardalan-jalal/dagwick/main/docs/screenshots/fleet.png)
+![The Dagwick fleet page](https://raw.githubusercontent.com/dagwick/dagwick/main/docs/screenshots/fleet.png)
 
 ## Acknowledge a check on purpose
 
@@ -96,12 +138,16 @@ comment.
 | Check | Id | The reason must say |
 | --- | --- | --- |
 | Tasks retry on failure | `retries` | why the DAG breaks it on purpose |
+| Fixed start_date | `dynamic_start_date` | why the DAG breaks it on purpose |
 | Retries are visible | `retry_alerts` | why the DAG breaks it on purpose |
 | Has a schedule | `schedule` | why the DAG breaks it on purpose |
 | No surprise backfills | `catchup` | why the DAG breaks it on purpose |
 | Bounded parallel runs | `max_active_runs` | why the DAG breaks it on purpose |
+| Safe use of depends_on_past | `depends_on_past` | why the DAG breaks it on purpose |
 | Split into steps | `decomposition` | why the DAG breaks it on purpose |
+| Tasks are connected | `isolated_tasks` | why the DAG breaks it on purpose |
 | Someone hears about failures | `failure_alerts` | where failures are alerted instead, e.g. a central listener or a Grafana rule |
+| Someone hears about late runs | `deadline_alerts` | how a late run is noticed instead, e.g. a freshness check on the data |
 | Stops after repeated failures | `auto_pause` | what stops the DAG when it keeps failing, e.g. on-call pausing it by hand |
 | Sensors free their worker slot | `sensor_slots` | why the sensor must keep its worker slot, e.g. it needs sub-minute reaction |
 
@@ -111,35 +157,39 @@ protects something every DAG needs. A comment for one of them is ignored, and
 the Dagwick tab says so. Run `./dev/run.sh` from a clone of this repository to
 see a demo DAG (`demo_acknowledged_ingest`) with every case.
 
-## Check DAGs before they are merged
+## Lint and fix DAG files
 
-`dagwick check` grades DAG files with the same checks as the UI and can fail a
-pull request below a chosen grade:
+The same checks run on your DAG files, before they are merged:
 
 ```bash
-dagwick check dags/ --min-grade C     # exit 1 if any DAG is below C
-dagwick check dags/my_dag.py --json   # machine-readable report
+dagwick check dags/ --min-grade C   # grade every DAG; exit 1 if any is below C
+dagwick fix dags/ --write           # fix what can be fixed safely
+dagwick explain retries             # why a check exists, with bad and good code
 ```
 
-It needs Airflow installed next to it, and it **imports the DAG files**, so
-their top-level code runs, the same as in Airflow's DAG processor. Use it on a
-developer machine or in CI. The Airflow plugin itself never runs DAG code.
+- `dagwick check` needs Airflow installed next to it, and it **imports the
+  DAG files**, so their top-level code runs, as in Airflow's DAG processor.
+  The Airflow plugin itself never runs DAG code.
+- `dagwick fix` never imports or runs the files. It moves deprecated imports
+  to their new path, and with `--unsafe-fixes` adds missing retries. Without
+  `--write` it only shows the diff.
+- `dagwick explain` needs neither Airflow nor your DAGs.
 
-Exit codes: `0` all good, `1` a DAG is below `--min-grade`, `2` a file failed
-to load.
-
-### pre-commit
+pre-commit:
 
 ```yaml
-- repo: https://github.com/ardalan-jalal/dagwick
-  rev: v0.2.0
+- repo: https://github.com/dagwick/dagwick
+  rev: v0.3.0
   hooks:
+    - id: dagwick-fix   # needs Dagwick newer than 0.3.0
     - id: dagwick
       args: [--min-grade, C]   # default: D
 ```
 
-The hook uses `language: system`, so run pre-commit from an environment where
-Airflow and Dagwick are installed.
+The hooks use `language: system`, so run pre-commit where Airflow and Dagwick
+are installed. **[Lint and fix your DAGs](https://github.com/dagwick/dagwick/blob/main/docs/linting.md)**
+has everything else: exit codes, a GitHub Actions workflow, how to adopt it in
+an existing repository, and how it fits next to Ruff's Airflow rules.
 
 ## Requirements
 
@@ -191,9 +241,13 @@ pip download dagwick==0.3.0 --no-deps -d dagwick-download
 gh attestation verify dagwick-download/*.whl -R ardalan-jalal/dagwick
 ```
 
+Releases up to 0.3.x were signed before the repository moved to the
+`dagwick` organization, so they verify against `ardalan-jalal/dagwick` as
+above. Later releases verify with `-R dagwick/dagwick`.
+
 The GitHub release also carries a Sigstore bundle (`.sigstore.json`) for the
 wheel and the sdist. See
-[Releasing](https://github.com/ardalan-jalal/dagwick/blob/main/RELEASING.md#verify-a-release)
+[Releasing](https://github.com/dagwick/dagwick/blob/main/RELEASING.md#verify-a-release)
 for how to check those.
 
 ## Remove
@@ -206,9 +260,8 @@ Then restart the api-server.
 
 ## More
 
-- [Seasonal moods, and how to turn them off](https://github.com/ardalan-jalal/dagwick/blob/main/docs/moods.md)
-- [Seasonal themes for all of Airflow, config only](https://github.com/ardalan-jalal/dagwick/blob/main/themes/README.md)
-- [What it checks, and how to add your own checks](https://github.com/ardalan-jalal/dagwick/blob/main/docs/checks.md)
-- [Roadmap](https://github.com/ardalan-jalal/dagwick/blob/main/ROADMAP.md)
-- [Security](https://github.com/ardalan-jalal/dagwick/blob/main/SECURITY.md) · [Contributing](https://github.com/ardalan-jalal/dagwick/blob/main/CONTRIBUTING.md) · [Changelog](https://github.com/ardalan-jalal/dagwick/blob/main/CHANGELOG.md) · [Releasing](https://github.com/ardalan-jalal/dagwick/blob/main/RELEASING.md)
-- License: [MIT](https://github.com/ardalan-jalal/dagwick/blob/main/LICENSE)
+- [Seasonal moods, and how to turn them off](https://github.com/dagwick/dagwick/blob/main/docs/moods.md)
+- [What it checks, and how to add your own checks](https://github.com/dagwick/dagwick/blob/main/docs/checks.md)
+- [Roadmap](https://github.com/dagwick/dagwick/blob/main/ROADMAP.md)
+- [Security](https://github.com/dagwick/dagwick/blob/main/SECURITY.md) · [Contributing](https://github.com/dagwick/dagwick/blob/main/CONTRIBUTING.md) · [Changelog](https://github.com/dagwick/dagwick/blob/main/CHANGELOG.md) · [Releasing](https://github.com/dagwick/dagwick/blob/main/RELEASING.md)
+- License: [MIT](https://github.com/dagwick/dagwick/blob/main/LICENSE)

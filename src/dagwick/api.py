@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from dagwick import __version__, settings, themes
 from dagwick.checks._sensors import sensor_task_ids
 from dagwick.checks.performance import SLOW_POKE_SECONDS, parse_status
+from dagwick.checks.reliability import LONG_RUN_SECONDS
 from dagwick.core import Context, registered_checks, score_dag
 
 log = logging.getLogger(__name__)
@@ -64,6 +65,9 @@ def _user() -> Any:
     return Depends(get_user)
 
 
+MISSING = object()  # nothing remembered yet (None already means "sensors not known")
+
+
 class _ScoreCache:
     """Scores keyed by (dag_id, dag_hash): a DAG is re-scored only when its code changes."""
 
@@ -71,6 +75,9 @@ class _ScoreCache:
         self._data: dict[str, tuple[str, dict[str, Any]]] = {}
         self._lock = threading.Lock()
         self._max = max_entries
+        # dag_id -> (dag_hash, sensor task ids): a version's sensors never change, so
+        # a cache lookup does not need to load the DAG just to find them.
+        self._sensors: dict[str, tuple[str, tuple[str, ...] | None]] = {}
 
     def get(self, dag_id: str, dag_hash: str) -> dict[str, Any] | None:
         with self._lock:
@@ -82,6 +89,18 @@ class _ScoreCache:
             if dag_id not in self._data and len(self._data) >= self._max:
                 self._data.pop(next(iter(self._data)))
             self._data[dag_id] = (dag_hash, report)
+
+    def sensors(self, dag_id: str, dag_hash: str) -> tuple[str, ...] | None | object:
+        """The sensor task ids remembered for this version, or ``MISSING``."""
+        with self._lock:
+            hit = self._sensors.get(dag_id)
+        return hit[1] if hit and hit[0] == dag_hash else MISSING
+
+    def put_sensors(self, dag_id: str, dag_hash: str, sensors: tuple[str, ...] | None) -> None:
+        with self._lock:
+            if dag_id not in self._sensors and len(self._sensors) >= self._max:
+                self._sensors.pop(next(iter(self._sensors)))
+            self._sensors[dag_id] = (dag_hash, sensors)
 
 
 _cache = _ScoreCache()
@@ -206,32 +225,95 @@ def _sensor_band(runs: SensorRuns) -> str:
     )
 
 
+def _typical_runs(dag_ids: list[str]) -> dict[str, float]:
+    """dag_id -> median seconds of its recent successful runs; {} when unknown."""
+    from dagwick.health import typical_run_seconds
+
+    try:
+        return typical_run_seconds(dag_ids)
+    except Exception:
+        log.exception("dagwick: could not read run times")
+        return {}
+
+
+def _run_band(seconds: float | None) -> str:
+    """The part of the cache key that run times change: long, short or unknown."""
+    return "-" if seconds is None else str(int(seconds >= LONG_RUN_SECONDS))
+
+
+def _latest_dag_hash(dag_id: str) -> str | None:
+    """The hash of the DAG's latest serialized version, read without its data blob.
+
+    None when the DAG has no serialized version or the lookup fails; the caller then
+    falls back to loading the full row.
+    """
+    from airflow.models.dag_version import DagVersion
+    from airflow.models.serialized_dag import SerializedDagModel
+    from airflow.utils.session import create_session
+    from sqlalchemy import select
+
+    try:
+        with create_session() as session:
+            return session.scalar(
+                select(SerializedDagModel.dag_hash)
+                .join(DagVersion, SerializedDagModel.dag_version_id == DagVersion.id)
+                .where(SerializedDagModel.dag_id == dag_id)
+                .order_by(DagVersion.version_number.desc())
+                .limit(1)
+            )
+    except Exception:
+        log.debug("dagwick: could not read the DAG hash of %s", dag_id, exc_info=True)
+        return None
+
+
 def _score_by_id(
-    dag_id: str, dags_in_file: int | None = None, facts: FileFacts | None = None
+    dag_id: str,
+    dags_in_file: int | None = None,
+    facts: FileFacts | None = None,
+    run_seconds: float | None | object = MISSING,
 ) -> dict[str, Any] | None:
     from airflow.models.serialized_dag import SerializedDagModel
 
-    sdm = SerializedDagModel.get(dag_id)
-    if sdm is None:
-        return None
-    dag = sdm.dag
-    if dags_in_file is None and getattr(dag, "fileloc", None):
-        dags_in_file = _dags_per_file([dag.fileloc]).get(dag.fileloc)
+    # Build the cache key from cheap lookups first. Loading and deserializing the DAG
+    # is the expensive part, and the fleet page would otherwise pay it for every DAG
+    # on every request, even when every score is already cached.
+    sdm = None
+    dag_hash = None if dags_in_file is None else _latest_dag_hash(dag_id)
+    sensors = _cache.sensors(dag_id, dag_hash) if dag_hash else MISSING
+    if sensors is MISSING:
+        sdm = SerializedDagModel.get(dag_id)
+        if sdm is None:
+            return None
+        dag_hash = sdm.dag_hash
+        sensors = sensor_task_ids(getattr(sdm, "data", None))
+        _cache.put_sensors(dag_id, dag_hash, sensors)
+    if dags_in_file is None and sdm is not None and getattr(sdm.dag, "fileloc", None):
+        dags_in_file = _dags_per_file([sdm.dag.fileloc]).get(sdm.dag.fileloc)
     if facts is None:
         facts = _file_facts([dag_id]).get(dag_id, (None, None))
     source_hash, parse_seconds = facts
     parse_band = parse_status(parse_seconds).value
-    sensors = sensor_task_ids(getattr(sdm, "data", None))
     sensor_runs = _sensor_runs(dag_id, sensors) if sensors else {}
+    if run_seconds is MISSING:
+        run_seconds = _typical_runs([dag_id]).get(dag_id)
     default_deferrable = _default_deferrable()
     scoring = settings.scoring()
     key = (
-        f"{sdm.dag_hash}:{dags_in_file}:{source_hash}:{parse_band}:"
-        f"{_sensor_band(sensor_runs)}:{int(default_deferrable)}:{scoring.key}"
+        f"{dag_hash}:{dags_in_file}:{source_hash}:{parse_band}:"
+        f"{_sensor_band(sensor_runs)}:{_run_band(run_seconds)}:{int(default_deferrable)}:"
+        f"{scoring.key}"
     )
     cached = _cache.get(dag_id, key)
     if cached is not None:
         return cached
+    if sdm is None or sdm.dag_hash != dag_hash:
+        sdm = SerializedDagModel.get(dag_id)
+        if sdm is None:
+            return None
+        if sdm.dag_hash != dag_hash:
+            # A new version landed between the two reads: score it on the next request.
+            dag_hash = sdm.dag_hash
+            key = f"{dag_hash}:{key.split(':', 1)[1]}"
     context = Context(
         dags_in_file=dags_in_file,
         source=_source(dag_id) if source_hash else None,
@@ -239,8 +321,9 @@ def _score_by_id(
         sensor_tasks=sensors,
         sensor_runs=sensor_runs,
         default_deferrable=default_deferrable,
+        typical_run_seconds=run_seconds,
     )
-    report = score_dag(dag, context, scoring)
+    report = score_dag(sdm.dag, context, scoring)
     _cache.put(dag_id, key, report)
     return report
 
@@ -406,9 +489,12 @@ def fleet(user: Annotated[Any, _user()]) -> dict[str, Any]:
         facts = _file_facts(dag_ids)
         health = _fleet_health(dag_ids)
         tags = _fleet_tags(dag_ids)
+        runs = _typical_runs(dag_ids)
         dags = []
         for dag_id, is_paused, owners, fileloc in rows:
-            report = _score_by_id(dag_id, per_file.get(fileloc), facts.get(dag_id, (None, None)))
+            report = _score_by_id(
+                dag_id, per_file.get(fileloc), facts.get(dag_id, (None, None)), runs.get(dag_id)
+            )
             if report is not None:
                 dags.append(
                     fleet_entry(
@@ -459,6 +545,7 @@ def checks() -> list[dict[str, Any]]:
             "acknowledgeable": c.acknowledgeable,
             "ack_hint": c.ack_hint,
             "pack": c.pack,
+            "why": c.why,
         }
         for c in registered_checks()
     ]
