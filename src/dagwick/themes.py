@@ -24,7 +24,7 @@ from functools import cache
 from http.cookies import CookieError, SimpleCookie
 from typing import Any
 
-from dagwick import halloween, lantern, newroz, snow
+from dagwick import halloween, lunar_new_year, newroz, snow
 
 log = logging.getLogger(__name__)
 
@@ -158,9 +158,10 @@ def _around(days: tuple[str, ...], before: int, after: int) -> tuple[tuple[date,
 DIWALI = _around(
     ("2026-11-08", "2027-10-29", "2028-10-17", "2029-11-05", "2030-10-26", "2031-11-14"), 2, 2
 )
-# The Lantern Festival: the 15th day of the first month of the Chinese calendar.
-LANTERN_FESTIVAL = _around(
-    ("2026-03-03", "2027-02-20", "2028-02-09", "2029-02-27", "2030-02-17", "2031-02-06"), 0, 0
+# Lunar New Year (Spring Festival) on the Chinese calendar: the season runs from New
+# Year's Eve to the Lantern Festival, the 15th day of the first month.
+LUNAR_NEW_YEAR = _around(
+    ("2026-02-17", "2027-02-06", "2028-01-26", "2029-02-13", "2030-02-03", "2031-01-23"), 1, 14
 )
 
 
@@ -237,14 +238,15 @@ THEMES: tuple[Theme, ...] = (
         calendar="Yazidi New Year",
     ),
     Theme(
-        id="lantern-festival",
-        name="Lantern Festival",
-        description="Red lanterns sway on a string along the top of Airflow, paper sky "
-        "lanterns drift up from the bottom, shooting stars streak past the first full "
-        "moon of the year and plum blossom drops petals in the corners, all behind Airflow's page.",
-        windows=LANTERN_FESTIVAL,
+        id="lunar-new-year",
+        name="Lunar New Year",
+        description="From New Year's Eve to the Lantern Festival: red lanterns sway on a "
+        "string along the top of Airflow, paper sky lanterns drift up and away, shooting "
+        "stars cross the sky under a full moon and plum blossom stirs in the corners, all "
+        "behind Airflow's page.",
+        windows=LUNAR_NEW_YEAR,
         calendar="Chinese calendar",
-        css=lantern.global_css,
+        css=lunar_new_year.global_css,
     ),
     Theme(id="ramadan", name="Ramadan", description=COMING_SOON, windows=RAMADAN),
     Theme(

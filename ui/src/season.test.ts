@@ -78,14 +78,20 @@ describe("moods on other calendars, one test per listed year", () => {
     ["2029-11-05", "diwali"],
     ["2030-10-26", "diwali"],
     ["2031-11-14", "diwali"],
-    // The Lantern Festival: one day.
-    ["2026-03-03", "lantern-festival"], // during Ramadan 2026: the festival wins
+    // Lunar New Year: New Year's Eve to the Lantern Festival (the 15th day).
+    ["2026-02-16", "lunar-new-year"], // New Year's Eve
+    ["2026-02-15", undefined],
+    ["2026-03-03", "lunar-new-year"], // the Lantern Festival, during Ramadan 2026: it wins
     ["2026-03-04", "ramadan"],
-    ["2027-02-20", "lantern-festival"],
-    ["2028-02-09", "lantern-festival"],
-    ["2029-02-27", "lantern-festival"],
-    ["2030-02-17", "lantern-festival"],
-    ["2031-02-06", "lantern-festival"],
+    ["2027-02-05", "lunar-new-year"],
+    ["2027-02-20", "lunar-new-year"],
+    ["2028-01-25", "lunar-new-year"],
+    ["2028-02-09", "lunar-new-year"],
+    ["2029-02-15", "eid"], // Eid al-Fitr falls inside it in 2029: Eid's three days win
+    ["2029-02-27", "lunar-new-year"],
+    ["2030-02-17", "lunar-new-year"],
+    ["2031-01-22", "lunar-new-year"],
+    ["2031-02-06", "lunar-new-year"],
     // Çarşema Sor: the first Wednesday from 14 April.
     ["2026-04-15", "carsema-sor"],
     ["2026-04-14", undefined],
@@ -101,6 +107,6 @@ describe("moods on other calendars, one test per listed year", () => {
 
   it("shows nothing for a year that isn't listed yet", () => {
     expect(mood("2032-11-01", ["diwali"])).toBeUndefined();
-    expect(mood("2032-02-21", ["lantern-festival"])).toBeUndefined();
+    expect(mood("2032-02-21", ["lunar-new-year"])).toBeUndefined();
   });
 });

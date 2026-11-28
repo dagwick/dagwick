@@ -439,7 +439,7 @@ html.dark .dagwick {
 .dagwick-fx--new-year, .dagwick-fx--birthday { background: radial-gradient(500px 220px at 50% 0%, rgba(192, 132, 252, .16), transparent 70%); }
 .dagwick-fx--language-day { background: radial-gradient(500px 220px at 50% 100%, rgba(251, 191, 36, .12), transparent 70%); }
 .dagwick-fx--diwali { background: radial-gradient(600px 200px at 50% 100%, rgba(245, 158, 11, .22), transparent 70%), linear-gradient(180deg, rgba(76, 29, 149, .22), transparent 90%); }
-.dagwick-fx--lantern-festival { background: radial-gradient(500px 220px at 50% 0%, rgba(220, 38, 38, .2), transparent 70%), linear-gradient(180deg, rgba(30, 27, 75, .3), transparent 90%); }
+.dagwick-fx--lunar-new-year { background: radial-gradient(500px 220px at 50% 0%, rgba(220, 38, 38, .2), transparent 70%), linear-gradient(180deg, rgba(30, 27, 75, .3), transparent 90%); }
 .dagwick-fx--carsema-sor { background: linear-gradient(180deg, rgba(254, 215, 170, .16), transparent 70%); }
 
 .dagwick-flake { position: absolute; top: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 4px rgba(255, 255, 255, .7);

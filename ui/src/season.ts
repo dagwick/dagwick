@@ -1,6 +1,6 @@
 // Seasonal moods: purely cosmetic. They never change scores, grades or text.
 // Dates use the viewer's local calendar. Islamic-calendar moods use the
-// browser's built-in Umm al-Qura calendar (Intl). Diwali and the Lantern Festival
+// browser's built-in Umm al-Qura calendar (Intl). Diwali and Lunar New Year
 // follow lunisolar calendars the browser doesn't have, so their dates are listed
 // per year (the same tables as src/dagwick/themes.py).
 
@@ -15,7 +15,7 @@ export type SeasonId =
   | "birthday"
   | "carsema-sor"
   | "diwali"
-  | "lantern-festival";
+  | "lunar-new-year";
 
 export interface Season {
   id: SeasonId;
@@ -70,10 +70,10 @@ export const SEASONS: Record<SeasonId, Season> = {
     icon: "🥚",
   },
   diwali: { id: "diwali", name: "Diwali", greeting: "Happy Diwali!", icon: "🪔" },
-  "lantern-festival": {
-    id: "lantern-festival",
-    name: "Lantern Festival",
-    greeting: "Happy Lantern Festival!",
+  "lunar-new-year": {
+    id: "lunar-new-year",
+    name: "Lunar New Year",
+    greeting: "Happy Lunar New Year!",
     icon: "🏮",
   },
 };
@@ -81,14 +81,14 @@ export const SEASONS: Record<SeasonId, Season> = {
 /**
  * All mood ids, in priority order: when two overlap, the earlier one wins. A short
  * festival comes before a longer one it can fall in (the birthday before Diwali,
- * Diwali before Halloween, the Lantern Festival before Ramadan).
+ * Diwali before Halloween, Lunar New Year before Ramadan).
  */
 export const SEASON_ORDER: SeasonId[] = [
   "newroz",
   "eid",
   "language-day",
   "carsema-sor",
-  "lantern-festival",
+  "lunar-new-year",
   "christmas",
   "new-year",
   "birthday",
@@ -129,14 +129,17 @@ export const DIWALI: Record<number, [number, number]> = {
   2031: [11, 14],
 };
 
-/** The Lantern Festival (15th day of the first Chinese month) per year. */
-export const LANTERN_FESTIVAL: Record<number, [number, number]> = {
-  2026: [3, 3],
-  2027: [2, 20],
-  2028: [2, 9],
-  2029: [2, 27],
-  2030: [2, 17],
-  2031: [2, 6],
+/**
+ * Lunar New Year's Day (the first day of the first Chinese month) per year; the mood runs
+ * from New Year's Eve to the Lantern Festival, the 15th day.
+ */
+export const LUNAR_NEW_YEAR: Record<number, [number, number]> = {
+  2026: [2, 17],
+  2027: [2, 6],
+  2028: [1, 26],
+  2029: [2, 13],
+  2030: [2, 3],
+  2031: [1, 23],
 };
 
 const DAY_MS = 86_400_000;
@@ -169,7 +172,10 @@ const RULES: Record<SeasonId, (date: Date) => boolean> = {
     const n = daysFrom(DIWALI, d);
     return n !== undefined && Math.abs(n) <= 2;
   },
-  "lantern-festival": (d) => daysFrom(LANTERN_FESTIVAL, d) === 0,
+  "lunar-new-year": (d) => {
+    const n = daysFrom(LUNAR_NEW_YEAR, d);
+    return n !== undefined && n >= -1 && n <= 14;
+  },
 };
 
 /**

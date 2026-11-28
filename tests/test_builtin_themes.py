@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -293,14 +294,20 @@ def test_banner_only_themes_leave_airflow_untouched():
         ("diwali", date(2029, 11, 5), True),
         ("diwali", date(2030, 10, 26), True),
         ("diwali", date(2031, 11, 14), True),
-        # The Lantern Festival: the 15th day of the first Chinese month, one day.
-        ("lantern-festival", date(2026, 3, 3), True),
-        ("lantern-festival", date(2026, 3, 4), False),
-        ("lantern-festival", date(2027, 2, 20), True),
-        ("lantern-festival", date(2028, 2, 9), True),
-        ("lantern-festival", date(2029, 2, 27), True),
-        ("lantern-festival", date(2030, 2, 17), True),
-        ("lantern-festival", date(2031, 2, 6), True),
+        # Lunar New Year: New Year's Eve to the Lantern Festival (the 15th day).
+        ("lunar-new-year", date(2026, 2, 16), True),  # New Year's Eve
+        ("lunar-new-year", date(2026, 2, 15), False),
+        ("lunar-new-year", date(2026, 3, 3), True),  # the Lantern Festival
+        ("lunar-new-year", date(2026, 3, 4), False),
+        ("lunar-new-year", date(2027, 2, 5), True),
+        ("lunar-new-year", date(2027, 2, 20), True),
+        ("lunar-new-year", date(2027, 2, 21), False),
+        ("lunar-new-year", date(2028, 1, 25), True),
+        ("lunar-new-year", date(2028, 2, 9), True),
+        ("lunar-new-year", date(2029, 2, 27), True),
+        ("lunar-new-year", date(2030, 2, 17), True),
+        ("lunar-new-year", date(2031, 1, 22), True),
+        ("lunar-new-year", date(2031, 2, 6), True),
         # Çarşema Sor: the first Wednesday on or after 14 April.
         ("carsema-sor", date(2026, 4, 15), True),
         ("carsema-sor", date(2026, 4, 14), False),
@@ -345,7 +352,7 @@ def test_new_festivals_name_their_calendar():
     assert themes.BY_ID["diwali"].when(today) == (
         "About 27 Oct – 31 Oct 2027 · Hindu calendar, moves each year"
     )
-    assert "Chinese calendar" in themes.BY_ID["lantern-festival"].when(today)
+    assert "Chinese calendar" in themes.BY_ID["lunar-new-year"].when(today)
 
 
 @pytest.mark.parametrize(
@@ -391,23 +398,54 @@ def test_newroz_dates_and_scene():
     assert "#root::after" in sheets["hide"] and "html::before" in sheets["reset"]
 
 
-def test_lantern_festival_dates_and_scene():
-    from dagwick import lantern
+def test_lunar_new_year_dates_and_scene():
+    from dagwick import lunar_new_year
 
-    theme = themes.BY_ID["lantern-festival"]
+    theme = themes.BY_ID["lunar-new-year"]
     assert theme.ready
-    assert pick_theme({}, date(2027, 2, 20)) is theme  # over Ramadan, which is coming soon
+    for day in (date(2027, 2, 5), date(2027, 2, 6), date(2027, 2, 20)):  # eve to day 15
+        assert pick_theme({}, day) is theme  # over Ramadan, which is coming soon
     assert pick_theme({}, date(2027, 2, 21)) is None
-    css = lantern.global_css()
-    for host in lantern.HOSTS:  # all behind the page, out of the mouse's way
+    css = lunar_new_year.global_css()
+    for host in lunar_new_year.HOSTS:  # all behind the page, out of the mouse's way
         assert css[host]["zIndex"] == "-1" and css[host]["pointerEvents"] == "none"
     still = css["@media (prefers-reduced-motion: reduce)"]
-    for host in lantern.MOVING:
+    for host in lunar_new_year.MOVING:
         assert "animation" in css[host] and still[host]["animation"] == "none"
     # Every image is still, so the browser draws it once and CSS only moves it.
     for host, style in css.items():
         assert "animate" not in json.dumps(style), host
     frames = css["@keyframes dagwickShooting"]
-    assert len(frames) == 4 * len(lantern.SHOOTING) + 1 and frames["100%"] == frames["0%"]
-    assert lantern.string_svg().count("<g id='ln'>") == 1  # drawn once, then reused
+    assert len(frames) == 4 * len(lunar_new_year.SHOOTING) + 1 and frames["100%"] == frames["0%"]
+    assert lunar_new_year.string_svg().count("<g id='ln'>") == 1  # drawn once, then reused
     assert len(json.dumps(css)) < 100_000
+
+
+@pytest.mark.parametrize("name", ["newroz", "lunar_new_year"])
+def test_drawn_themes_come_to_rest(name):
+    # The scene moves for a few minutes after a page loads, then rests, so an Airflow
+    # page left open all day costs nothing; nothing asks the browser to keep layers ready.
+    import importlib
+
+    from dagwick.scene import SETTLE
+
+    css = importlib.import_module(f"dagwick.{name}").global_css()
+    moving = {
+        k: v["animation"] for k, v in css.items() if not k.startswith("@") and "animation" in v
+    }
+    assert moving
+    for host, animation in moving.items():
+        assert "infinite" not in animation and "alternate" not in animation, host
+        duration, runs = re.search(r"([\d.]+)s\b.* (\d+)$", animation).groups()
+        assert SETTLE * 0.7 <= float(duration) * int(runs) <= SETTLE * 1.2, host
+    assert "willChange" not in json.dumps(css)
+
+
+def test_settle_runs_each_animation_for_about_the_settle_time():
+    from dagwick.scene import settle
+
+    css = settle({"a::before": {"animation": "x 0.9s steps(6) infinite"}, "@keyframes x": {}}, 9)
+    assert css["a::before"]["animation"] == "x 0.9s steps(6) 10"
+    assert settle({"b::after": {"animation": "y 300s linear infinite"}}, 9)["b::after"] == {
+        "animation": "y 300s linear 1"  # at least once
+    }

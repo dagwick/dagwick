@@ -24,7 +24,7 @@ SEASONAL_MOODS = (
     "eid",
     "language-day",
     "carsema-sor",
-    "lantern-festival",
+    "lunar-new-year",
     "christmas",
     "new-year",
     "birthday",
@@ -32,6 +32,8 @@ SEASONAL_MOODS = (
     "halloween",
     "ramadan",
 )
+# Mood ids that were renamed, so an older airflow.cfg keeps working.
+RENAMED_MOODS = {"lantern-festival": "lunar-new-year"}  # renamed after 0.3.0
 
 
 def parse_seasonal_moods(raw: str | None) -> str | list[str]:
@@ -45,6 +47,7 @@ def parse_seasonal_moods(raw: str | None) -> str | list[str]:
     if value in ("off", "none", "false"):
         return "off"
     wanted = [part.strip() for part in value.split(",") if part.strip()]
+    wanted = [RENAMED_MOODS.get(m, m) for m in wanted]
     unknown = [m for m in wanted if m not in SEASONAL_MOODS]
     if unknown:
         log.warning("dagwick: ignoring unknown seasonal_moods %s", unknown)

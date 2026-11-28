@@ -28,13 +28,13 @@ All notable changes to this project are documented here. The format follows
   Like Christmas and Halloween it shows by itself on its dates, can be applied
   any day from the **Themes** tab, and stands still for viewers who prefer
   reduced motion.
-- **A Lantern Festival theme for all of Airflow**, on the 15th day of the
-  first lunar month (about 20 February 2027; the date follows the Chinese
-  calendar). A string of red palace lanterns sways along the top, paper sky
-  lanterns rise from the bottom in two depths and float away, a shooting star
-  crosses the sky now and then under the first full moon of the year, and
+- **A Lunar New Year theme for all of Airflow**, from New Year's Eve to the
+  Lantern Festival on the 15th day (about 5–20 February 2027; the dates
+  follow the Chinese calendar). A string of red palace lanterns sways along
+  the top, paper sky lanterns rise from the bottom in two depths and float
+  away, a shooting star crosses the sky now and then under a full moon, and
   branches of plum blossom reach in from the bottom corners. Drawn behind
-  Airflow's page, it shows by itself on its day, can be applied from the
+  Airflow's page, it shows by itself on its dates, can be applied from the
   **Themes** tab, and stands still for viewers who prefer reduced motion.
 - **New Year no longer looks like Dagwick's birthday.** On its dates the
   banner's Wick wears a black top hat with a gold band instead of a party hat,
@@ -124,17 +124,22 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- **Themes cost Airflow far less to show.** Newroz and the Lantern Festival
-  draw every picture once and move it with CSS transforms, which the browser
-  does without redrawing anything, instead of animating inside the pictures.
-  Measured with Airflow's DAG list open, each now adds about 5% of one CPU
-  core, down from about 22% (Newroz) and 25% (Lantern Festival), a little less
-  than the snow theme. All drawn themes now encode their pictures more
-  compactly, so the snow theme's styles shrink from about 158 KB to 110 KB and
-  Halloween's from 86 KB to 67 KB.
+- **The Lantern Festival mood is now Lunar New Year** (`lunar-new-year`), the
+  name most people know, and runs from New Year's Eve to the Lantern Festival
+  on the 15th day instead of only that day. `lantern-festival` in
+  `seasonal_moods` still works and means `lunar-new-year`.
+- **Themes cost Airflow far less to show.** Newroz and Lunar New Year draw
+  every picture once and move it with CSS transforms, which the browser does
+  without redrawing anything, instead of animating inside the pictures. While
+  they move, each adds about 4% of one CPU core, down from about 22% (Newroz)
+  and 25% (Lunar New Year). They also come to rest about three minutes after
+  a page loads, and a resting theme costs nothing, so an Airflow page left
+  open all day isn't slowed down. All drawn themes now encode their pictures
+  more compactly, so the snow theme's styles shrink from about 158 KB to
+  110 KB and Halloween's from 86 KB to 67 KB.
 - **The Themes page lists only themes you can apply** (Christmas snow,
-  Halloween, New Year, Newroz, Lantern Festival). The "Coming soon" cards are gone; each of those themes
-  appears there once its decorations are made. Dagwick's banner still dresses
+  Halloween, Newroz, Lunar New Year). The "Coming soon" cards are gone; each
+  of those themes appears there once its decorations are made. Dagwick's banner still dresses
   up on their dates.
 - **Dagwick presents itself as a DAG linter.** The README and the PyPI
   summary now lead with linting and fixing DAG files; the Airflow UI is the

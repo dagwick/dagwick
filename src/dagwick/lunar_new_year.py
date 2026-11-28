@@ -1,7 +1,8 @@
-"""The Lantern Festival for the whole Airflow UI, drawn with CSS and SVG only (used by
-the Lantern Festival theme).
+"""Lunar New Year for the whole Airflow UI, drawn with CSS and SVG only (used by the
+Lunar New Year theme, which runs from New Year's Eve to the Lantern Festival on the
+15th day).
 
-The festival falls on the first full moon of the lunar year, so a full moon hangs in the
+The season ends on the first full moon of the lunar year, so a full moon hangs in the
 top-right corner with a thin cloud across it, under a sky of faint stars where a
 shooting star streaks past now and then. A string of red palace lanterns sways along
 the top of the window: each has gold caps, a warm light inside and a red tassel.
@@ -22,7 +23,7 @@ import math
 import random
 from typing import Any
 
-from dagwick.scene import url
+from dagwick.scene import settle, url
 
 SEED = 15  # the 15th day of the first month
 
@@ -365,8 +366,12 @@ def shooting_keyframes() -> dict[str, dict[str, str]]:
     return frames
 
 
+# A warm glow along the bottom, where the sky lanterns are lit.
+GLOW = "radial-gradient(ellipse 70% 220px at 50% 100%, rgba(251, 146, 60, 0.13), transparent 70%)"
+
+
 def global_css() -> dict[str, Any]:
-    """The Lantern Festival as Airflow theme ``globalCss`` (selector -> style).
+    """Lunar New Year as Airflow theme ``globalCss`` (selector -> style).
 
     Every image is still: CSS moves the layers with transforms, which the browser does
     without redrawing them, so the theme costs Airflow almost nothing.
@@ -381,7 +386,6 @@ def global_css() -> dict[str, Any]:
         "width": f"{BLOSSOM_W}px",
         "height": f"{BLOSSOM_H}px",
         "backgroundSize": plum,
-        "willChange": "transform",
     }
     rising = {
         **layer,
@@ -391,7 +395,6 @@ def global_css() -> dict[str, Any]:
         "height": f"calc(100vh + {SKY_H}px)",
         "backgroundSize": f"{SKY_W}px {SKY_H}px",
         "backgroundPosition": "center 0",
-        "willChange": "transform",
     }
     css: dict[str, Any] = {
         # Faint stars across the top and a warm glow along the bottom, where the sky
@@ -399,14 +402,13 @@ def global_css() -> dict[str, Any]:
         NIGHT_HOST: {
             **layer,
             "inset": "0",
-            "backgroundImage": f"{url(night_svg())}, radial-gradient(ellipse 70% 220px at "
-            "50% 100%, rgba(251, 146, 60, 0.13), transparent 70%)",
+            "backgroundImage": f"{url(night_svg())}, {GLOW}",
             "backgroundRepeat": "repeat-x, no-repeat",
             "backgroundPosition": "center top, center bottom",
             "backgroundSize": f"{NIGHT_W}px {NIGHT_H}px, 100% 100%",
         },
-        # On a light page the pale stars vanish.
-        "html.light::before": {"mixBlendMode": "multiply"},
+        # No stars on a light page, only the glow.
+        "html.light::before": {"backgroundImage": GLOW, "backgroundSize": "100% 100%"},
         # Sky lanterns rising from the bottom and up off the top of the window, in two
         # depths: the near ones climb twice as fast as the far ones. Each layer is one
         # tile taller than the window and slides up by a tile, so the browser only
@@ -447,7 +449,6 @@ def global_css() -> dict[str, Any]:
             "backgroundImage": "linear-gradient(to right, transparent, "
             "rgba(255, 215, 106, 0.5) 65%, #fffbe8)",
             "opacity": "0",
-            "willChange": "transform, opacity",
             "animation": "dagwickShooting 18s linear infinite",
         },
         "html.light #root::after": {
@@ -461,18 +462,18 @@ def global_css() -> dict[str, Any]:
             "left": "64px",
             "transformOrigin": "0 100%",
             "backgroundImage": url(blossom_svg(PLUM_LEFT, 1)),
-            "animation": "dagwickPlum 7s ease-in-out infinite alternate",
+            "animation": "dagwickPlum 14s ease-in-out infinite",
         },
         BLOSSOM_RIGHT: {
             **blossom,
             "right": "0",
             "transformOrigin": "100% 100%",
             "backgroundImage": url(blossom_svg(PLUM_RIGHT, -1)),
-            "animation": "dagwickPlum 8s ease-in-out -4s infinite alternate",
+            "animation": "dagwickPlum 16s ease-in-out -8s infinite",
         },
         "@keyframes dagwickPlum": {
-            "from": {"transform": "rotate(-1deg)"},
-            "to": {"transform": "rotate(1deg)"},
+            "25%": {"transform": "rotate(-1deg)"},
+            "75%": {"transform": "rotate(1deg)"},
         },
         # The string of red lanterns along the top, swaying in the breeze: a slant from
         # the top, so the lanterns swing while the cord stays where it hangs.
@@ -484,13 +485,12 @@ def global_css() -> dict[str, Any]:
             "backgroundPosition": "center top",
             "backgroundSize": f"{STRING_W}px {STRING_H}px",
             "transformOrigin": "50% 0",
-            "willChange": "transform",
-            "animation": "dagwickBreeze 5s ease-in-out infinite alternate",
+            "animation": "dagwickBreeze 10s ease-in-out infinite",
         },
         "@keyframes dagwickBreeze": {
-            "from": {"transform": "skewX(-3deg)"},
-            "to": {"transform": "skewX(3deg)"},
+            "25%": {"transform": "skewX(-3deg)"},
+            "75%": {"transform": "skewX(3deg)"},
         },
         "@media (prefers-reduced-motion: reduce)": {host: {"animation": "none"} for host in MOVING},
     }
-    return css
+    return settle(css)

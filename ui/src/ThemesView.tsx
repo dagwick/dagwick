@@ -193,7 +193,7 @@ function Scene({ id }: { id: string }) {
   if (id === "halloween") return <HalloweenScene />;
   if (id === "christmas") return <SnowScene />;
   if (id === "newroz") return <NewrozScene />;
-  if (id === "lantern-festival") return <LanternScene />;
+  if (id === "lunar-new-year") return <LanternScene />;
   return <BannerScene id={id} />;
 }
 
@@ -367,7 +367,7 @@ function NewrozScene() {
   );
 }
 
-/** The Lantern Festival: red lanterns on a string, the full moon and rising sky lanterns. */
+/** Lunar New Year: red lanterns on a string, the full moon and rising sky lanterns. */
 function LanternScene() {
   const hanging: [number, number, number][] = [
     [30, 22, 1],

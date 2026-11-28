@@ -67,14 +67,6 @@ def ghosts_svg(rng: random.Random, width: int, height: int, count: int) -> str:
 
 # ---- small bats ----
 
-BAT = (
-    "M0 -2 C2 -6 6 -6 8 -3 C10 -6 14 -7 18 -4 C15 -3 14 0 15 3 C12 1 9 2 8 4 "
-    "C6 2 3 2 0 5 C-3 2 -6 2 -8 4 C-9 2 -12 1 -15 3 C-14 0 -15 -3 -18 -4 "
-    "C-14 -7 -10 -6 -8 -3 C-6 -6 -2 -6 0 -2Z M-2.2 -2.5 L-1.6 -6 L-0.4 -3.2Z "
-    "M2.2 -2.5 L1.6 -6 L0.4 -3.2Z"
-)
-
-
 # Each bat is drawn in four wing positions, one above the other, and flips through them
 # like a flip-book: wings up, half, down, half.
 FRAME_W, FRAME_H = 64, 40

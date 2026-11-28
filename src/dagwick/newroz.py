@@ -21,7 +21,7 @@ import math
 import random
 from typing import Any
 
-from dagwick.scene import url
+from dagwick.scene import settle, url
 
 SEED = 321  # 21 March
 
@@ -546,9 +546,8 @@ def global_css() -> dict[str, Any]:
         "height": f"{FLOWERS_H}px",
         "backgroundSize": flower_size,
         "transformOrigin": "50% 100%",
-        "willChange": "transform",
     }
-    return {
+    css: dict[str, Any] = {
         # Sparks and embers rising from the fires and up off the top of the window
         # (painted first, under the hills). The layer is one tile taller than the window
         # and slides up by a tile, so the browser only moves it, never redraws it.
@@ -560,7 +559,6 @@ def global_css() -> dict[str, Any]:
             "height": f"calc(100vh + {EMBER_H}px)",
             "backgroundImage": f"{url(sparks_svg())}, {url(embers_svg())}",
             "backgroundSize": f"{W}px {EMBER_H}px",
-            "willChange": "transform",
             "animation": "dagwickRise 36s linear infinite",
         },
         "@keyframes dagwickRise": {
@@ -576,10 +574,9 @@ def global_css() -> dict[str, Any]:
             "width": f"{BEAM_W}px",
             "height": f"{BEAM_H}px",
             "backgroundImage": url(beams_svg()),
-            "willChange": "opacity",
-            "animation": "dagwickBeams 9s ease-in-out infinite alternate",
+            "animation": "dagwickBeams 18s ease-in-out infinite",
         },
-        "@keyframes dagwickBeams": {"from": {"opacity": "0.45"}, "to": {"opacity": "1"}},
+        "@keyframes dagwickBeams": {"50%": {"opacity": "0.45"}},
         # The sun in the corner, turning slowly.
         "#root::before": {
             **layer,
@@ -589,7 +586,6 @@ def global_css() -> dict[str, Any]:
             "height": f"{sun}px",
             "backgroundImage": url(sun_svg(sun)),
             "opacity": "0.6",
-            "willChange": "transform",
             "animation": "dagwickSun 180s linear infinite",
         },
         "html.light #root::before": {"opacity": "0.85"},
@@ -606,26 +602,25 @@ def global_css() -> dict[str, Any]:
             **flowers,
             "left": "64px",
             "backgroundImage": url(flowers_svg(SEED + 3)),
-            "animation": "dagwickSway 6s ease-in-out infinite alternate",
+            "animation": "dagwickSway 12s ease-in-out infinite",
         },
         FLOWERS_RIGHT: {
             **flowers,
             "right": "0",
             "backgroundImage": url(flowers_svg(SEED + 4)),
-            "animation": "dagwickSway 7s ease-in-out -3s infinite alternate",
+            "animation": "dagwickSway 14s ease-in-out -6s infinite",
         },
         "@keyframes dagwickSway": {
-            "from": {"transform": "rotate(-1.5deg)"},
-            "to": {"transform": "rotate(1.5deg)"},
+            "25%": {"transform": "rotate(-1.5deg)"},
+            "75%": {"transform": "rotate(1.5deg)"},
         },
         # Firelight on the hillsides, breathing, and the torches climbing to a fire.
         "body::after": {
             **band,
             "backgroundImage": f"{url(torches_svg())}, {url(glow_svg())}",
-            "willChange": "opacity",
-            "animation": "dagwickGlow 2.4s ease-in-out infinite alternate",
+            "animation": "dagwickGlow 4.8s ease-in-out infinite",
         },
-        "@keyframes dagwickGlow": {"from": {"opacity": "0.55"}, "to": {"opacity": "1"}},
+        "@keyframes dagwickGlow": {"50%": {"opacity": "0.55"}},
         # The flames: a few still frames shown in turn, so they flicker.
         "html::after": {
             **band,
@@ -639,3 +634,4 @@ def global_css() -> dict[str, Any]:
         },
         "@media (prefers-reduced-motion: reduce)": {host: {"animation": "none"} for host in MOVING},
     }
+    return settle(css)

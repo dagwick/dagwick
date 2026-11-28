@@ -21,13 +21,13 @@ open the **Themes** tab on Dagwick's page.
 | 🎂 Dagwick's birthday | Nov 8 | Party hat, a candle on a cupcake, balloons, confetti |
 | 🥚 Çarşema Sor (Yazidi New Year) | the first Wednesday from Apr 14 | A crown of red flowers, a white candle among painted eggs, red flowers in a meadow, the sunrise |
 | 🪔 Diwali | five days around Lakshmi Puja | Wick in a clay diya with marigolds, a marigold garland, a row of lit diyas |
-| 🏮 Lantern Festival | the 15th day of the first Chinese month | A red-and-gold candle with a small lantern, red lanterns swinging, sky lanterns drifting up |
+| 🏮 Lunar New Year | New Year's Eve to the Lantern Festival (the 15th day of the first Chinese month) | A red-and-gold candle with a small lantern, red lanterns swinging, sky lanterns drifting up |
 
 Each mood also shows a short English greeting (for example "Happy Newroz!").
 
 - **Dates** use the viewer's local calendar. Ramadan and Eid follow the
   Umm al-Qura Islamic calendar built into the browser, so they move every year
-  without any date tables. Diwali and the Lantern Festival follow lunisolar
+  without any date tables. Diwali and Lunar New Year follow lunisolar
   calendars the browser doesn't have, so their dates are listed for 2026–2031
   (in `ui/src/season.ts` and `src/dagwick/themes.py`); extend both tables as
   the years go by. Çarşema Sor is the first Wednesday of April on the Julian
@@ -35,8 +35,8 @@ Each mood also shows a short English greeting (for example "Happy Newroz!").
   by a day.
 - **Overlaps:** when two moods fall on the same day, a short festival wins
   over a longer one: Newroz over Eid al-Fitr 2026, Dagwick's birthday over
-  Diwali 2026, Diwali over Halloween 2027, and the Lantern Festival over
-  Ramadan 2026. The full order is `SEASON_ORDER` in `ui/src/season.ts`.
+  Diwali 2026, Diwali over Halloween 2027, Lunar New Year over
+  Ramadan 2026 and 2027, and Eid al-Fitr over Lunar New Year 2029 and 2030. The full order is `SEASON_ORDER` in `ui/src/season.ts`.
 - **Viewers** can click **Hide** on the greeting to turn moods off for
   themselves (remembered in their browser), and **Show** to bring them back.
 - **Motion:** all animation stops for viewers who prefer reduced motion.
@@ -54,8 +54,9 @@ seasonal_moods = auto              # every mood (default)
 ```
 
 or with the environment variable `AIRFLOW__DAGWICK__SEASONAL_MOODS`. Mood ids:
-`newroz`, `eid`, `language-day`, `carsema-sor`, `lantern-festival`,
+`newroz`, `eid`, `language-day`, `carsema-sor`, `lunar-new-year`,
 `christmas`, `new-year`, `birthday`, `diwali`, `halloween`, `ramadan`.
+`lantern-festival`, its name in 0.3.0, still works and means `lunar-new-year`.
 
 ## Preview a mood
 

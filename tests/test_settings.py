@@ -68,3 +68,8 @@ def test_config_endpoint_follows_configured_grades(monkeypatch):
 def test_on_by_default_when_not_configured(monkeypatch):
     monkeypatch.delenv("AIRFLOW__DAGWICK__SEASONAL_MOODS", raising=False)
     assert settings.seasonal_moods() == "auto"
+
+
+def test_renamed_mood_ids_still_work():
+    # "lantern-festival" (0.3.0) became "lunar-new-year"; an older airflow.cfg keeps working.
+    assert parse_seasonal_moods("newroz, lantern-festival") == ["newroz", "lunar-new-year"]

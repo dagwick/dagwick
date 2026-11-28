@@ -107,10 +107,29 @@ function Chamberstick({ mood, paint }: SkinProps) {
   return (
     <g>
       {/* finger loop, lying flat like the dish */}
-      <ellipse cx="124.5" cy="143.4" rx="10.5" ry="4.6" fill="none" stroke="var(--dagwick-metal-dark)" strokeWidth="4" />
-      <path d="M118 140.4 a10.5 4.6 0 0 1 13.6 0.4" fill="none" stroke="var(--dagwick-metal)" strokeWidth="1.5" strokeLinecap="round" />
+      <ellipse
+        cx="124.5"
+        cy="143.4"
+        rx="10.5"
+        ry="4.6"
+        fill="none"
+        stroke="var(--dagwick-metal-dark)"
+        strokeWidth="4"
+      />
+      <path
+        d="M118 140.4 a10.5 4.6 0 0 1 13.6 0.4"
+        fill="none"
+        stroke="var(--dagwick-metal)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <Dish paint={paint} />
-      <Pillar body={paint("wax")} top="var(--dagwick-wax-top)" pool="var(--dagwick-wax-pool)" edge="var(--dagwick-wax-edge)" />
+      <Pillar
+        body={paint("wax")}
+        top="var(--dagwick-wax-top)"
+        pool="var(--dagwick-wax-pool)"
+        edge="var(--dagwick-wax-edge)"
+      />
       {/* drips */}
       <g fill="var(--dagwick-wax-top)" stroke="var(--dagwick-wax-edge)" strokeWidth="1" strokeLinejoin="round">
         <path d="M65.8 116.9 Q69 118.2 72.8 118.5 V124.4 A3.5 3.5 0 0 1 65.8 124.4Z" />
@@ -214,7 +233,14 @@ function Cupcake({ uid }: SkinProps) {
         d="M52.5 136 C50.5 130 58 126.5 64 127.2 C66 122.5 76 121.5 80 121.5 C84 121.5 94 122.5 96 127.2 C102 126.5 109.5 130 107.5 136 C106.2 140 100 139.6 96.5 137 C92.5 140.2 86 140.2 82.4 137.2 C78 140.6 71 140.2 67.6 137 C63 140 53.8 140.2 52.5 136Z"
         fill="#f9a8d4"
       />
-      <path d="M61 129.4 C66 125 75 123.8 81 124" fill="none" stroke="#fdf2f8" strokeOpacity="0.9" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d="M61 129.4 C66 125 75 123.8 81 124"
+        fill="none"
+        stroke="#fdf2f8"
+        strokeOpacity="0.9"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
       {sprinkles.map(([x, y, a], i) => (
         <rect
           key={i}
@@ -276,7 +302,13 @@ function Pumpkin({ mood }: SkinProps) {
   return (
     <g>
       {/* a tendril and a leaf */}
-      <path d="M52 121 C44 121 40 114 44.5 110 C48 107 52 111 49 114" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M52 121 C44 121 40 114 44.5 110 C48 107 52 111 49 114"
+        fill="none"
+        stroke="#16a34a"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
       <path d="M54 119.5 C56 113 63 112 66 114.5 C62 119 58 121 54 119.5Z" fill="#22c55e" />
       <ellipse cx="59.5" cy="133" rx="19.5" ry="17.6" fill="#ea580c" />
       <ellipse cx="100.5" cy="133" rx="19.5" ry="17.6" fill="#ea580c" />
@@ -315,7 +347,10 @@ function EidCandle({ paint }: SkinProps) {
       {pillarShade("#022c22", 0.3)}
       <path d="M65.5 118 V138" stroke="#a7f3d0" strokeOpacity="0.5" strokeWidth="2.4" strokeLinecap="round" />
       <path d="M63 124.5 A17 4.6 0 0 0 97 124.5 V131.5 A17 4.6 0 0 1 63 131.5Z" fill="#fbbf24" />
-      <path d="M70 131.4 l3 -3 3 3.4 -3 3z M80 132.6 l3 -3 3 3 -3 3.2z M89.4 131.2 l2.6 -2.8 2.6 2.4 -2.6 3z" fill="#b45309" />
+      <path
+        d="M70 131.4 l3 -3 3 3.4 -3 3z M80 132.6 l3 -3 3 3 -3 3.2z M89.4 131.2 l2.6 -2.8 2.6 2.4 -2.6 3z"
+        fill="#b45309"
+      />
       {wick(105, 114)}
     </g>
   );
@@ -355,18 +390,31 @@ function Diya() {
   return (
     <g>
       <ellipse cx="80" cy="140" rx="36" ry="5" fill="#000" opacity="0.18" />
-      <path d="M46 116 Q80 108 110 114 L127 106 Q122 118 112 123 Q104 140 80 140 Q56 140 49 126 Q44 120 46 116Z" fill="#c2410c" />
+      <path
+        d="M46 116 Q80 108 110 114 L127 106 Q122 118 112 123 Q104 140 80 140 Q56 140 49 126 Q44 120 46 116Z"
+        fill="#c2410c"
+      />
       <path d="M49 126 Q56 140 80 140 Q104 140 112 123 Q100 134 80 134 Q60 134 49 126Z" fill="#9a3412" />
       <ellipse cx="79" cy="115.6" rx="31" ry="5.4" fill="#7c2d12" />
       <ellipse cx="79" cy="116.2" rx="26" ry="3.6" fill="#a16207" opacity="0.7" />
-      <path d="M56 125.5 Q80 132 106 124.5" fill="none" stroke="#fde68a" strokeWidth="1.8" strokeDasharray="0.1 5.2" strokeLinecap="round" />
-      <path d="M62 129.6 l3 -2.6 3 2.6 -3 2.6z M77 131.6 l3 -2.6 3 2.6 -3 2.6z M92 130.4 l3 -2.6 3 2.6 -3 2.6z" fill="#fbbf24" />
+      <path
+        d="M56 125.5 Q80 132 106 124.5"
+        fill="none"
+        stroke="#fde68a"
+        strokeWidth="1.8"
+        strokeDasharray="0.1 5.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M62 129.6 l3 -2.6 3 2.6 -3 2.6z M77 131.6 l3 -2.6 3 2.6 -3 2.6z M92 130.4 l3 -2.6 3 2.6 -3 2.6z"
+        fill="#fbbf24"
+      />
       {wick(105, 115)}
     </g>
   );
 }
 
-/** The Lantern Festival: a red candle with gold bands. */
+/** Lunar New Year: a red candle with gold bands. */
 function LanternCandle({ paint }: SkinProps) {
   return (
     <g>
@@ -374,7 +422,10 @@ function LanternCandle({ paint }: SkinProps) {
       <Pillar body="#b91c1c" top="#f87171" pool="#dc2626" w={17} />
       {pillarShade("#450a0a", 0.35)}
       <path d="M65.5 118 V138" stroke="#fecaca" strokeOpacity="0.45" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M63 121 A17 4.6 0 0 0 97 121 V124 A17 4.6 0 0 1 63 124Z M63 133 A17 4.6 0 0 0 97 133 V136 A17 4.6 0 0 1 63 136Z" fill="#facc15" />
+      <path
+        d="M63 121 A17 4.6 0 0 0 97 121 V124 A17 4.6 0 0 1 63 124Z M63 133 A17 4.6 0 0 0 97 133 V136 A17 4.6 0 0 1 63 136Z"
+        fill="#facc15"
+      />
       <path d="M73 127.6 h14 M80 125 v6" stroke="#facc15" strokeWidth="1.4" strokeLinecap="round" />
       {wick(105, 114)}
     </g>
@@ -386,7 +437,13 @@ function EggCandle({ paint }: SkinProps) {
   return (
     <g>
       <Dish paint={paint} rx={38} />
-      <Pillar body={paint("wax")} top="var(--dagwick-wax-top)" pool="var(--dagwick-wax-pool)" edge="var(--dagwick-wax-edge)" w={16} />
+      <Pillar
+        body={paint("wax")}
+        top="var(--dagwick-wax-top)"
+        pool="var(--dagwick-wax-pool)"
+        edge="var(--dagwick-wax-edge)"
+        w={16}
+      />
       <path d="M64 125 A16 4.6 0 0 0 96 125 V130 A16 4.6 0 0 1 64 130Z" fill="#dc2626" />
       {wick(105, 114)}
     </g>
@@ -403,7 +460,7 @@ const VESSELS: Record<SeasonId, (p: SkinProps) => ReactNode> = {
   eid: EidCandle,
   "language-day": Books,
   diwali: Diya,
-  "lantern-festival": LanternCandle,
+  "lunar-new-year": LanternCandle,
   "carsema-sor": EggCandle,
 };
 
@@ -449,7 +506,10 @@ export function VesselFront({ season, mood, paint }: SkinProps) {
             <circle cx="109.4" cy="146.8" r="2.2" />
           </g>
           {/* bow */}
-          <path d="M80 151 C74 144.6 66.5 145.4 67 151 C66.5 156.6 74 157.4 80 151Z M80 151 C86 144.6 93.5 145.4 93 151 C93.5 156.6 86 157.4 80 151Z" fill="#ef4444" />
+          <path
+            d="M80 151 C74 144.6 66.5 145.4 67 151 C66.5 156.6 74 157.4 80 151Z M80 151 C86 144.6 93.5 145.4 93 151 C93.5 156.6 86 157.4 80 151Z"
+            fill="#ef4444"
+          />
           <circle cx="80" cy="151" r="2.9" fill="#b91c1c" />
         </g>
       );
@@ -487,17 +547,30 @@ export function VesselFront({ season, mood, paint }: SkinProps) {
         <g className="dagwick-vessel">
           {/* posts */}
           <path d="M44.5 43 V123 M115.5 43 V123" stroke="#eab308" strokeWidth="2.6" />
-          <path d="M44.5 57 Q44.5 46.6 56 46.6 M115.5 57 Q115.5 46.6 104 46.6" fill="none" stroke="#eab308" strokeWidth="1.6" />
+          <path
+            d="M44.5 57 Q44.5 46.6 56 46.6 M115.5 57 Q115.5 46.6 104 46.6"
+            fill="none"
+            stroke="#eab308"
+            strokeWidth="1.6"
+          />
           {/* dome */}
           <path d="M46.5 39 C46.5 29.5 67 30 77 24.5 Q80 22.6 83 24.5 C93 30 113.5 29.5 113.5 39Z" fill="#0f766e" />
-          <path d="M80 24 V39 M64.5 31 Q62.6 35 63 39 M95.5 31 Q97.4 35 97 39" fill="none" stroke="#fbbf24" strokeWidth="1.3" />
+          <path
+            d="M80 24 V39 M64.5 31 Q62.6 35 63 39 M95.5 31 Q97.4 35 97 39"
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="1.3"
+          />
           <rect x="40.5" y="38" width="79" height="6.4" rx="2.4" fill="#eab308" />
           <path d="M80 24 V20.4" stroke="#eab308" strokeWidth="1.8" />
           <path d="M82 11.4 a4.7 4.7 0 1 0 3.7 7.7 a3.7 3.7 0 1 1 -3.7 -7.7z" fill="var(--dagwick-moon)" />
           {/* base */}
           <rect x="40.5" y="121.6" width="79" height="6.4" rx="2.4" fill="#eab308" />
           <path d="M44 128 H116 L109.5 143 H50.5Z" fill="#0f766e" />
-          <path d="M80 130.6 l4.4 4.9 -4.4 4.9 -4.4 -4.9z M62 132.4 l2.8 3.1 -2.8 3.1 -2.8 -3.1z M98 132.4 l2.8 3.1 -2.8 3.1 -2.8 -3.1z" fill="#fbbf24" />
+          <path
+            d="M80 130.6 l4.4 4.9 -4.4 4.9 -4.4 -4.9z M62 132.4 l2.8 3.1 -2.8 3.1 -2.8 -3.1z M98 132.4 l2.8 3.1 -2.8 3.1 -2.8 -3.1z"
+            fill="#fbbf24"
+          />
           <rect x="47" y="142.4" width="66" height="6" rx="2.4" fill="#ca8a04" />
         </g>
       );
@@ -537,7 +610,7 @@ export function VesselFront({ season, mood, paint }: SkinProps) {
           ))}
         </g>
       );
-    case "lantern-festival":
+    case "lunar-new-year":
       // A small round lantern standing beside the candle.
       return (
         <g className="dagwick-vessel">
@@ -545,7 +618,12 @@ export function VesselFront({ season, mood, paint }: SkinProps) {
           <rect x="124.5" y="117" width="9" height="3" rx="1" fill="#facc15" />
           <ellipse cx="129" cy="130" rx="13" ry="11.5" fill="#dc2626" />
           {lit && <ellipse cx="129" cy="130" rx="7" ry="7" fill="#fde68a" opacity="0.35" />}
-          <path d="M129 118.6 Q120 130 129 141.4 M129 118.6 Q138 130 129 141.4" fill="none" stroke="#7f1d1d" strokeWidth="0.9" />
+          <path
+            d="M129 118.6 Q120 130 129 141.4 M129 118.6 Q138 130 129 141.4"
+            fill="none"
+            stroke="#7f1d1d"
+            strokeWidth="0.9"
+          />
           <rect x="124.5" y="140" width="9" height="3" rx="1" fill="#facc15" />
           <path d="M127 143 V150 M129 143 V151 M131 143 V150" stroke="#facc15" strokeWidth="1" />
         </g>
@@ -574,7 +652,12 @@ export function VesselFront({ season, mood, paint }: SkinProps) {
       // An inkwell and a quill.
       return (
         <g className="dagwick-vessel">
-          <path d="M139 99 C128 106 122 120 123.5 135 C132 127 140 114 139 99Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.8" />
+          <path
+            d="M139 99 C128 106 122 120 123.5 135 C132 127 140 114 139 99Z"
+            fill="#f8fafc"
+            stroke="#cbd5e1"
+            strokeWidth="0.8"
+          />
           <path d="M138 102 L123 140" stroke="#94a3b8" strokeWidth="1.3" strokeLinecap="round" />
           <path d="M131 109 l-5.4 2.4 M133.6 115 l-7.6 3.6 M131 122.6 l-6 3" stroke="#cbd5e1" strokeWidth="0.9" />
           <path d="M114.5 139.5 h16 l-1.8 11.5 h-12.4z" fill="#1e293b" />
@@ -631,7 +714,13 @@ function Flower({ x, y, petal, centre, r = 3 }: { x: number; y: number; petal: s
       {[0, 1, 2, 3, 4].map((i) => {
         const a = (i * 72 - 90) * (Math.PI / 180);
         return (
-          <circle key={i} cx={(x + Math.cos(a) * r * 1.15).toFixed(2)} cy={(y + Math.sin(a) * r * 1.15).toFixed(2)} r={r} fill={petal} />
+          <circle
+            key={i}
+            cx={(x + Math.cos(a) * r * 1.15).toFixed(2)}
+            cy={(y + Math.sin(a) * r * 1.15).toFixed(2)}
+            r={r}
+            fill={petal}
+          />
         );
       })}
       <circle cx={x} cy={y} r={r * 0.75} fill={centre} />

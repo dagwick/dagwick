@@ -156,7 +156,10 @@ function Newroz() {
         />
       ))}
       <svg className="dagwick-mountains" viewBox="0 0 800 120" preserveAspectRatio="none">
-        <path className="far" d="M0 120 L0 70 L90 30 L170 66 L260 18 L360 64 L450 26 L560 70 L650 22 L740 60 L800 40 L800 120 Z" />
+        <path
+          className="far"
+          d="M0 120 L0 70 L90 30 L170 66 L260 18 L360 64 L450 26 L560 70 L650 22 L740 60 L800 40 L800 120 Z"
+        />
         <path className="near" d="M0 120 L0 92 L120 58 L220 90 L330 54 L440 92 L560 60 L690 94 L800 64 L800 120 Z" />
       </svg>
       {/* Newroz bonfires on the peaks (HTML, so they keep their shape when the mountains stretch). */}
@@ -229,7 +232,9 @@ function Bunting() {
       {range(16).map((i) => {
         const x = 25 + i * 48;
         const y = 4 + 30 * (1 - ((x - 400) / 400) ** 2) * 0.95;
-        return <path key={i} d={`M${x - 10} ${y} L${x + 10} ${y} L${x} ${y + 16} Z`} fill={CONFETTI[i % CONFETTI.length]} />;
+        return (
+          <path key={i} d={`M${x - 10} ${y} L${x + 10} ${y} L${x} ${y + 16} Z`} fill={CONFETTI[i % CONFETTI.length]} />
+        );
       })}
     </svg>
   );
@@ -280,7 +285,10 @@ function Diwali() {
       <Stars n={10} />
       {range(n).map((i) => (
         <span key={i} className="dagwick-diya" style={{ left: pct(0.05 + (i / (n - 1)) * 0.9) }}>
-          <span className="dagwick-diya-flame" style={{ animationDelay: sec(-rand(i, 1)), animationDuration: sec(0.35 + rand(i, 2) * 0.3) }} />
+          <span
+            className="dagwick-diya-flame"
+            style={{ animationDelay: sec(-rand(i, 1)), animationDuration: sec(0.35 + rand(i, 2) * 0.3) }}
+          />
           <svg viewBox="0 0 30 14" width="30" height="14">
             <path d="M2 3 Q15 0 26 3 L30 1.6 Q28 5 25 6.4 Q22 13 15 13 Q6 13 3 7 Q1 5 2 3Z" fill="#c2410c" />
             <ellipse cx="14" cy="3.4" rx="11" ry="2" fill="#7c2d12" />
@@ -292,7 +300,7 @@ function Diwali() {
   );
 }
 
-/** The Lantern Festival: round red lanterns swinging from the top, sky lanterns drifting up. */
+/** Lunar New Year: round red lanterns swinging from the top, sky lanterns drifting up. */
 function LanternFestival() {
   return (
     <>
@@ -400,7 +408,7 @@ const SCENES: Record<SeasonId, () => ReactNode> = {
   ),
   "language-day": () => <Letters />,
   diwali: () => <Diwali />,
-  "lantern-festival": () => <LanternFestival />,
+  "lunar-new-year": () => <LanternFestival />,
   "carsema-sor": () => <CarsemaSor />,
 };
 
